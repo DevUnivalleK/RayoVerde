@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class TareaController extends Controller
+class VentaController extends Controller
 {
     //
 }
