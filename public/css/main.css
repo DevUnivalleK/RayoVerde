@@ -1,0 +1,172 @@
+/* ==========================================================================
+   ESTILOS GLOBALES Y BASE
+   ========================================================================== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--gris-claro);
+    color: var(--gris-oscuro);
+    transition: background-color 0.3s ease;
+}
+
+/* Tipografía de títulos */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--verde-primario);
+}
+
+/* ==========================================================================
+   NAVEGACIÓN (NAVBAR)
+   ========================================================================== */
+.nav-link {
+    color: var(--gris-oscuro) !important;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--verde-primario) !important;
+}
+
+/* Estilo para el buscador */
+.input-group .form-control:focus {
+    border-color: var(--verde-acento);
+    box-shadow: 0 0 0 0.25rem rgba(46, 204, 113, 0.25);
+}
+
+/* ==========================================================================
+   COMPONENTE: VENTANA FLOTANTE DE NOTIFICACIONES
+   ========================================================================== */
+.notif-panel-contextual {
+    position: fixed;     /* Lo hace flotar sobre el contenido */
+    top: 75px;          /* Ajuste debajo del navbar */
+    right: 20px;        /* Alineación cerca del perfil */
+    width: 380px;       /* Ancho estándar */
+    background: white;
+    border-radius: 15px;
+    display: none;      /* Controlado por JS */
+    z-index: 2000;      /* Prioridad visual alta */
+    max-height: 500px;
+    overflow-y: auto;   /* Scroll interno */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); /* Efecto de elevación */
+    border: 1px solid var(--verde-borde);
+}
+
+.notif-item-index {
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.notif-item-index:hover {
+    background-color: var(--verde-fondo-claro);
+}
+
+.notif-item-index.unread {
+    border-left: 4px solid var(--verde-primario);
+    background-color: #f0fdf4; /* Verde muy suave para no leídas */
+}
+
+/* ==========================================================================
+   COMPONENTE: CHATBOT FLOTANTE
+   ========================================================================== */
+.chatbot-floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: var(--verde-primario);
+    color: white;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--sombra);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    z-index: 1000;
+}
+
+.chatbot-floating-btn:hover {
+    transform: scale(1.1);
+    background-color: var(--verde-secundario);
+}
+
+.chatbot-floating-btn i {
+    font-size: 24px;
+}
+
+.chatbot-floating-btn span {
+    font-size: 10px;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+/* ==========================================================================
+   DASHBOARD ADMINISTRADOR (Sidebar y Cards)
+   ========================================================================== */
+/* Sidebar */
+.sidebar-link {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
+
+.sidebar-link:hover {
+    background-color: var(--verde-secundario) !important;
+    padding-left: 20px;
+}
+
+/* Tarjetas de métricas */
+.admin-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    border-radius: 12px;
+}
+
+.admin-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Tablas Administrativas */
+.table thead {
+    background-color: var(--verde-fondo-claro);
+}
+
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   BOTONES Y ELEMENTOS DE ACCIÓN
+   ========================================================================== */
+.btn-verde {
+    background-color: var(--verde-primario);
+    color: white;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.btn-verde:hover {
+    background-color: var(--verde-secundario);
+    color: white;
+}
+
+.btn-close-custom {
+    cursor: pointer;
+    color: #666;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+
+.btn-close-custom:hover {
+    color: var(--verde-primario);
+}
+
+/* Utilidad para bordes redondeados pulcros */
+.rounded-pulcro {
+    border-radius: 15px !important;
+}
