@@ -29,14 +29,20 @@
             <ul class="nav nav-pills flex-column mb-auto">
                 <!-- Opción: Productos -->
                 <li class="nav-item mb-2">
-                    <a href="#" class="nav-link text-white sidebar-link">
-                        <i class="fas fa-boxes me-2 text-center" style="width: 20px;"></i> Productos
-                    </a>
+                    <a href="{{ route('admin.productos.index') }}" class="nav-link text-white sidebar-link active">
+    <i class="fas fa-question-circle me-2"></i> Productos
+</a>
                 </li>
                 <!-- Opción: Envios/Regiones -->
                 <li class="nav-item mb-2">
                     <a href="#" class="nav-link text-white sidebar-link">
                         <i class="fas fa-map-marker-alt me-2 text-center" style="width: 20px;"></i> Envios/Regiones
+                    </a>
+                </li>
+
+                 <li class="nav-item mb-2">
+                    <a href="{{ route('admin.ventas.index') }}" class="nav-link text-white sidebar-link active">
+                       <i class="fas fa-question-circle me-2"></i> Gestion de Ventas
                     </a>
                 </li>
                 <!-- Opción: FAQ -->

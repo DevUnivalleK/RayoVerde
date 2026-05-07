@@ -70,7 +70,7 @@ Route::prefix('admin/productos')->name('admin.productos.')->group(function () {
     Route::get('/',           [ProductoController::class, 'index'])->name('index');
     Route::get('/crear',      [ProductoController::class, 'create'])->name('crear');
     Route::post('/',          [ProductoController::class, 'store'])->name('store');
-    Route::get('/{id}/editar',  [ProductoController::class, 'edit'])->name('edit');
+    Route::get('/{id}/editar',  [ProductoController::class, 'edit'])->name('editar');
     Route::put('/{id}',         [ProductoController::class, 'update'])->name('update');
     Route::delete('/{id}',      [ProductoController::class, 'destroy'])->name('destroy');
 });
