@@ -2,22 +2,29 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\ProductoCatalogoController;
+use App\Http\Controllers\Admin\ProductoController;
+use App\Http\Controllers\Admin\VentaController;
+
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/admin/envios', fn() => view('Envios.envios-dashboard'))->name('admin.envios.index');
-Route::get('/admin/envios/gestionar', fn() => view('Envios.envios-gestionar'))->name('admin.envios.gestionar');
-Route::get('/admin/envios/crear', fn() => view('Envios.envios-form'))->name('admin.envios.crear');
-Route::get('/admin/envios/editar', fn() => view('Envios.envios-form'))->name('admin.envios.editar');
+// Catálogo público
+Route::get('/catalogo', [ProductoCatalogoController::class, 'index'])->name('catalogo.index');
 
+// Admin productos (CRUD completo)
+Route::prefix('admin/productos')->name('admin.productos.')->group(function () {
+    Route::get('/',          [ProductoController::class, 'index'])->name('index');
+    Route::get('/crear',     [ProductoController::class, 'create'])->name('crear');
+    Route::post('/',         [ProductoController::class, 'store'])->name('store');
+    Route::get('/{id}/editar',  [ProductoController::class, 'edit'])->name('editar');
+    Route::put('/{id}',         [ProductoController::class, 'update'])->name('update');
+    Route::delete('/{id}',      [ProductoController::class, 'destroy'])->name('destroy');
+});
 
-Route::get('/admin/faqs', fn() => view('FAQS.faqs'))->name('admin.faqs');
-Route::get('/admin/faqs/gestionar', fn() => view('FAQS.faqs-gestionar'))->name('admin.faqs.gestionar');
-Route::get('/admin/faqs/crear', fn() => view('FAQS.faqs-form'))->name('admin.faqs.crear');
-Route::get('/admin/faqs/editar', fn() => view('FAQS.faqs-form'))->name('admin.faqs.editar');
-
-
-Route::get('/admin/regiones/gestionar', fn() => view('Regiones.regiones-gestionar'))->name('admin.regiones.gestionar');
-Route::get('/admin/regiones/crear', fn() => view('Regiones.regiones-form'))->name('admin.regiones.crear');
-Route::get('/admin/regiones/editar', fn() => view('Regiones.regiones-form'))->name('admin.regiones.editar');
+// Admin ventas
+Route::prefix('admin/ventas')->name('admin.ventas.')->group(function () {
+    Route::get('/', [VentaController::class, 'index'])->name('index');
+    Route::post('/', [VentaController::class, 'store'])->name('store');
+});

@@ -1,8 +1,9 @@
 @extends('layout')
-@section('title', 'Gestionar Regiones — Rayo Verde')
+@section('title', 'Gestionar Productos — Rayo Verde')
 
 @push('styles')
 <style>
+    /*http://127.0.0.1:8000/admin/productos */
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,11 +16,9 @@
     --green-400: #6bb83a;
     --green-100: #edf5e1;
     --green-50:  #f4faea;
-    --amber-700: #633806;
     --amber-100: #fdf0db;
-    --amber-500: #c47c1a;
-    --blue-700:  #185fa5;
     --blue-100:  #e3eef9;
+    --blue-700:  #185fa5;
     --ink:       #0d1f05;
     --ink-mid:   #3a4a30;
     --ink-muted: #7a8f6e;
@@ -56,17 +55,14 @@ body { font-family: 'Sora', sans-serif; background: var(--surface); color: var(-
 .rv-hero::after {
     content: '';
     position: absolute; right: -60px; bottom: -60px;
-    width: 260px; height: 260px;
-    border-radius: 50%;
+    width: 260px; height: 260px; border-radius: 50%;
     border: 40px solid rgba(255,255,255,0.04);
 }
 .rv-hero-top { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; position: relative; }
 .rv-logo {
     width: 48px; height: 48px; border-radius: 12px;
-    background: rgba(255,255,255,0.12);
-    border: 1.5px solid rgba(255,255,255,0.25);
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden; flex-shrink: 0;
+    background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
 }
 .rv-logo img { width: 100%; height: 100%; object-fit: contain; }
 .rv-brand-name { font-family: 'Instrument Serif', serif; font-size: 20px; color: #fff; letter-spacing: -0.3px; }
@@ -84,29 +80,29 @@ body { font-family: 'Sora', sans-serif; background: var(--surface); color: var(-
     letter-spacing: -1px; line-height: 1.1; margin-bottom: 8px;
 }
 .rv-hero h1 em { font-style: italic; color: var(--green-400); }
-.rv-hero p { color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 300; letter-spacing: 0.2px; }
+.rv-hero p { color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 300; }
 
 /* Stats bar */
 .rv-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border-top: 1px solid rgba(255,255,255,0.1);
-    position: relative;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid rgba(255,255,255,0.1); position: relative;
 }
 .rv-stat { padding: 20px 24px; border-right: 1px solid rgba(255,255,255,0.08); transition: background .2s; }
 .rv-stat:last-child { border-right: none; }
 .rv-stat:hover { background: rgba(255,255,255,0.05); }
 .rv-stat-val {
-    font-family: 'Instrument Serif', serif;
-    font-size: 30px; color: #fff; letter-spacing: -1px; line-height: 1;
-    display: flex; align-items: center; gap: 6px;
+    font-family: 'Instrument Serif', serif; font-size: 30px; color: #fff;
+    letter-spacing: -1px; line-height: 1; display: flex; align-items: center; gap: 6px;
 }
 .rv-stat-lbl { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-on  { background: #8de88d; box-shadow: 0 0 6px rgba(141,232,141,0.6); }
+.dot-off { background: #ff9e9e; box-shadow: 0 0 6px rgba(255,158,158,0.5); }
 
 /* ─── Toolbar ────────────────────────────────────────── */
-.rv-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.rv-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .rv-search {
-    flex: 1; display: flex; align-items: center; gap: 10px;
+    flex: 1; min-width: 200px; display: flex; align-items: center; gap: 10px;
     background: var(--white); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 0 14px;
     box-shadow: var(--shadow-card); transition: border-color .2s;
@@ -119,6 +115,26 @@ body { font-family: 'Sora', sans-serif; background: var(--surface); color: var(-
     color: var(--ink); background: transparent; padding: 11px 0;
 }
 .rv-search input::placeholder { color: var(--ink-muted); }
+
+/* Filtro tipo aceite */
+.rv-select {
+    padding: 10px 14px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-family: 'Sora', sans-serif;
+    font-size: 12px; color: var(--ink); background: var(--white);
+    outline: none; cursor: pointer; box-shadow: var(--shadow-card);
+    transition: border-color .2s;
+}
+.rv-select:focus { border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(79,144,32,0.1); }
+
+/* ─── Flash messages ─────────────────────────────────── */
+.rv-flash {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500;
+    margin-bottom: 16px;
+}
+.rv-flash-success { background: var(--green-100); color: var(--green-700); border: 1px solid #b8d9a0; }
+.rv-flash-error   { background: #fceaea; color: #7a1f1f; border: 1px solid #f5c2c2; }
 
 /* ─── Card ───────────────────────────────────────────── */
 .rv-card {
@@ -134,8 +150,7 @@ body { font-family: 'Sora', sans-serif; background: var(--surface); color: var(-
 .rv-card-title { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -0.2px; }
 .rv-card-icon {
     width: 32px; height: 32px; border-radius: var(--radius-sm);
-    background: var(--green-100); display: flex; align-items: center; justify-content: center;
-    overflow: hidden; flex-shrink: 0;
+    background: var(--green-100); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .rv-card-icon img { width: 18px; height: 18px; object-fit: contain; }
 .rv-badge {
@@ -149,7 +164,7 @@ thead th {
     padding: 9px 18px; text-align: left; font-size: 10px;
     letter-spacing: 1px; text-transform: uppercase;
     color: var(--ink-muted); background: var(--surface);
-    border-bottom: 1px solid var(--border); font-weight: 500; white-space: nowrap;
+    border-bottom: 1px solid var(--border); font-weight: 500;
 }
 .th-sortable { cursor: pointer; user-select: none; transition: color .15s; }
 .th-sortable:hover { color: var(--green-600); }
@@ -157,34 +172,55 @@ thead th {
 tbody tr { border-bottom: 1px solid #f0f4eb; transition: background .15s; }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--green-50); }
-tbody td { padding: 12px 18px; color: var(--ink); font-size: 13px; vertical-align: middle; }
+tbody td { padding: 11px 18px; color: var(--ink); font-size: 13px; vertical-align: middle; }
 tbody td.muted { color: var(--ink-muted); font-size: 12px; font-weight: 300; }
 
-/* ─── Ciudad badge ───────────────────────────────────── */
-.ciudad-tag {
+/* Thumbnail en tabla */
+.rv-thumb {
+    width: 44px; height: 44px; border-radius: var(--radius-sm);
+    object-fit: cover; border: 1px solid var(--border);
+    background: var(--green-50);
+}
+.rv-thumb-placeholder {
+    width: 44px; height: 44px; border-radius: var(--radius-sm);
+    background: var(--green-50); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+}
+.rv-thumb-placeholder img { width: 20px; height: 20px; object-fit: contain; opacity: 0.3; }
+
+.price { font-weight: 600; color: var(--green-600); font-variant-numeric: tabular-nums; }
+
+.pill {
     display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.pill-on  { background: var(--green-100); color: var(--green-700); }
+.pill-off { background: #fceaea; color: #7a1f1f; }
+.pill-on::before  { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--green-500); }
+.pill-off::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #d94a4a; }
+
+.tipo-tag {
+    display: inline-block; padding: 2px 9px; border-radius: 20px;
     background: var(--blue-100); color: var(--blue-700);
-    padding: 3px 10px; border-radius: 20px;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.2px;
+    font-size: 11px; font-weight: 600;
 }
 
-/* ─── Action buttons ─────────────────────────────────── */
+/* Action buttons */
 .td-actions { display: flex; gap: 6px; align-items: center; }
 .btn-icon {
     width: 32px; height: 32px; border-radius: var(--radius-sm);
     border: 1px solid var(--border); background: var(--white);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all .17s ease; flex-shrink: 0;
-    text-decoration: none;
+    cursor: pointer; transition: all .17s ease; flex-shrink: 0; text-decoration: none;
 }
 .btn-icon img { width: 15px; height: 15px; object-fit: contain; }
 .btn-icon-delete:hover { background: #fceaea; border-color: #f5c2c2; transform: scale(1.08); }
 .btn-icon-edit:hover   { background: var(--green-100); border-color: var(--green-400); transform: scale(1.08); }
 
-/* ─── Empty state ────────────────────────────────────── */
+/* Empty */
 .rv-empty { padding: 40px 20px; text-align: center; color: var(--ink-muted); font-size: 13px; }
 
-/* ─── Bottom buttons ─────────────────────────────────── */
+/* ─── Buttons ────────────────────────────────────────── */
 .rv-btn-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .btn {
     display: inline-flex; align-items: center; gap: 7px;
@@ -201,8 +237,7 @@ tbody td.muted { color: var(--ink-muted); font-size: 12px; font-weight: 300; }
 
 /* ─── Modal ──────────────────────────────────────────── */
 .rv-modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(13,31,5,0.45);
+    position: fixed; inset: 0; background: rgba(13,31,5,0.45);
     backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
     display: flex; align-items: center; justify-content: center;
     z-index: 9999; opacity: 0; pointer-events: none; transition: opacity .22s ease;
@@ -217,53 +252,37 @@ tbody td.muted { color: var(--ink-muted); font-size: 12px; font-weight: 300; }
 }
 .rv-modal-overlay.active .rv-modal { transform: translateY(0) scale(1); }
 .rv-modal-header { padding: 22px 24px 0; display: flex; align-items: center; gap: 13px; }
-.rv-modal-ico {
-    width: 42px; height: 42px; border-radius: 10px;
-    background: #fceaea; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
+.rv-modal-ico { width: 42px; height: 42px; border-radius: 10px; background: #fceaea; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .rv-modal-ico img { width: 20px; height: 20px; object-fit: contain; }
-.rv-modal-title { font-family: 'Instrument Serif', serif; font-size: 20px; color: var(--ink); font-weight: 400; letter-spacing: -0.3px; }
-.rv-modal-body { padding: 14px 24px 22px; }
-.rv-modal-body p { font-size: 13px; color: var(--ink-mid); line-height: 1.6; }
+.rv-modal-title { font-family: 'Instrument Serif', serif; font-size: 20px; color: var(--ink); font-weight: 400; }
+.rv-modal-body { padding: 14px 24px 22px; font-size: 13px; color: var(--ink-mid); line-height: 1.6; }
 .rv-modal-body strong { color: var(--ink); font-weight: 600; }
 .rv-modal-divider { height: 1px; background: var(--border); margin: 0 24px; }
 .rv-modal-actions { padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px; background: var(--surface); }
-.btn-modal-cancel {
-    background: transparent; color: var(--ink-mid); border: 1.5px solid var(--border);
-    padding: 8px 18px; border-radius: var(--radius-sm);
-    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .17s;
-}
+.btn-modal-cancel { background: transparent; color: var(--ink-mid); border: 1.5px solid var(--border); padding: 8px 18px; border-radius: var(--radius-sm); font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .17s; }
 .btn-modal-cancel:hover { background: var(--green-100); border-color: var(--green-400); color: var(--green-700); }
-.btn-modal-confirm {
-    background: #c0392b; color: #fff; border: none;
-    padding: 8px 20px; border-radius: var(--radius-sm);
-    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer;
-    transition: all .17s; display: flex; align-items: center; gap: 7px;
-}
+.btn-modal-confirm { background: #c0392b; color: #fff; border: none; padding: 8px 20px; border-radius: var(--radius-sm); font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .17s; display: flex; align-items: center; gap: 7px; }
 .btn-modal-confirm img { width: 13px; height: 13px; object-fit: contain; filter: brightness(0) invert(1); }
 .btn-modal-confirm:hover { background: #a93226; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(192,57,43,0.35); }
+
+@media (max-width: 640px) {
+    .rv-stats { grid-template-columns: repeat(2, 1fr); }
+    .rv-hero h1 { font-size: 28px; }
+    .rv-toolbar { flex-direction: column; align-items: stretch; }
+    .rv-search { min-width: unset; }
+}
 </style>
 @endpush
 
 @section('content')
 
 @php
-$regiones = [
-    ['Zona Sur',        'La Paz'],
-    ['Centro',          'La Paz'],
-    ['El Alto',         'El Alto'],
-    ['Cota Cota',       'La Paz'],
-    ['Achumani',        'La Paz'],
-    ['Cercado',         'Cochabamba'],
-    ['Equipetrol',      'Santa Cruz'],
-    ['Plan 3000',       'Santa Cruz'],
-];
-
-$ciudades = collect($regiones)->pluck(1)->unique()->count();
-$porCiudad = collect($regiones)->groupBy(1)->map->count();
+$total = $productos->count();
+$disponibles = $productos->count();
+$noDisp = 0;
 @endphp
 
-{{-- ── HERO ───────────────────────────────────────── --}}
+{{-- ── HERO ─────────────────────────────────────────── --}}
 <div class="rv-hero">
     <div class="rv-hero-top">
         <div class="rv-logo">
@@ -276,77 +295,131 @@ $porCiudad = collect($regiones)->groupBy(1)->map->count();
     </div>
 
     <div class="rv-hero-body">
-        <div class="rv-hero-eyebrow">Logística</div>
-        <h1>Gestionar <em>Regiones</em></h1>
-        <p>Administra las zonas de cobertura y sus ciudades asociadas</p>
+        <div class="rv-hero-eyebrow">Catálogo</div>
+        <h1>Gestionar <em>Productos</em></h1>
+        <p>Administra el catálogo de aceites, precios e imágenes</p>
     </div>
 
     <div class="rv-stats">
         <div class="rv-stat">
-            <div class="rv-stat-val">{{ count($regiones) }}</div>
-            <div class="rv-stat-lbl">Regiones registradas</div>
+            <div class="rv-stat-val">{{ $total }}</div>
+            <div class="rv-stat-lbl">Productos registrados</div>
         </div>
         <div class="rv-stat">
-            <div class="rv-stat-val">{{ $ciudades }}</div>
-            <div class="rv-stat-lbl">Ciudades cubiertas</div>
+            <div class="rv-stat-val"><span class="dot dot-on"></span>{{ $disponibles }}</div>
+            <div class="rv-stat-lbl">Productos disponibles</div>
         </div>
         <div class="rv-stat">
-            <div class="rv-stat-val">{{ $porCiudad->max() }}</div>
-            <div class="rv-stat-lbl">Máx. zonas por ciudad</div>
+            <div class="rv-stat-val"><span class="dot dot-off"></span>{{ $noDisp }}</div>
+            <div class="rv-stat-lbl">No disponibles</div>
+        </div>
+        <div class="rv-stat">
+            <div class="rv-stat-val">0</div>
+            <div class="rv-stat-lbl">Tipos de aceite</div>
         </div>
     </div>
 </div>
 
-{{-- ── TOOLBAR ─────────────────────────────────────── --}}
+{{-- ── Flash messages ───────────────────────────────── --}}
+@if(session('success'))
+    <div class="rv-flash rv-flash-success">
+        ✓ {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="rv-flash rv-flash-error">
+        ✗ {{ session('error') }}
+    </div>
+@endif
+
+{{-- ── TOOLBAR ──────────────────────────────────────── --}}
 <div class="rv-toolbar">
     <div class="rv-search">
         <img src="/images/icono-buscar.png" alt="" class="rv-search-icon">
-        <input type="text" id="buscador" placeholder="Buscar región o ciudad..." oninput="filtrarTabla()">
+        <input type="text" id="buscador" placeholder="Buscar producto, tipo de aceite..." oninput="filtrarTabla()">
     </div>
+    <form method="GET" action="{{ route('admin.productos.index') }}" id="formFiltro">
+</form>
 </div>
 
-{{-- ── TABLA ───────────────────────────────────────── --}}
+{{-- ── TABLA ─────────────────────────────────────────── --}}
 <div class="rv-card">
     <div class="rv-card-head">
         <div class="rv-card-title">
             <div class="rv-card-icon">
-                <img src="/images/icono-region.png" alt="">
+                <img src="/images/icono-producto.png" alt="">
             </div>
-            Regiones registradas
+            Productos registrados
         </div>
-        <span class="rv-badge" id="rv-badge">{{ count($regiones) }} registros</span>
+        <span class="rv-badge" id="rv-badge">{{ $total }} registros</span>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th class="th-sortable" onclick="sortTable(0)">Nombre de la Región <span class="sort-icon">⇅</span></th>
-                <th class="th-sortable" onclick="sortTable(1)">Ciudad <span class="sort-icon">⇅</span></th>
+                <th>Imagen</th>
+                <th class="th-sortable" onclick="sortTable(1)">Nombre <span class="sort-icon">⇅</span></th>
+                <th>Tipo de aceite</th>
+                <th class="th-sortable" onclick="sortTable(3)">Precio (Bs.) <span class="sort-icon">⇅</span></th>
+                <th>Estado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody id="tablaBody">
-            @foreach($regiones as $i => $r)
-            <tr data-index="{{ $i }}"
-                data-region="{{ $r[0] }}"
-                data-ciudad="{{ $r[1] }}">
-                <td>{{ $r[0] }}</td>
+            @forelse($productos as $producto)
+            <tr data-nombre="{{ strtolower($producto->nombre) }}"
+                data-tipo="{{ strtolower($producto->tipo_aceite ?? '') }}">
                 <td>
-                    <span class="ciudad-tag">{{ $r[1] }}</span>
+                    @if($producto->imagen_url)
+                        <img src="{{ $producto->imagen_url }}"
+                             alt="{{ $producto->nombre }}"
+                             class="rv-thumb">
+                    @else
+                        <div class="rv-thumb-placeholder">
+                            <img src="/images/icono-producto.png" alt="">
+                        </div>
+                    @endif
+                </td>
+                <td><strong>{{ $producto->nombre }}</strong></td>
+                <td>
+                    @if($producto->tipo_aceite)
+                        <span class="tipo-tag">{{ $producto->tipo_aceite }}</span>
+                    @else
+                        <span class="muted">—</span>
+                    @endif
+                </td>
+                <td class="price">{{ number_format($producto->precio, 2) }}</td>
+                <td>
+                    <span class="pill {{ $producto->disponible ? 'pill-on' : 'pill-off' }}">
+                        {{ $producto->disponible ? 'Disponible' : 'No disponible' }}
+                    </span>
                 </td>
                 <td>
                     <div class="td-actions">
-                        <a href="{{ route('admin.regiones.editar') }}" class="btn-icon btn-icon-edit" title="Editar">
+                        <a href="{{ route('admin.productos.editar', $producto->id_producto) }}"
+                           class="btn-icon btn-icon-edit" title="Editar">
                             <img src="/images/icono-editar.png" alt="Editar">
                         </a>
                         <button class="btn-icon btn-icon-delete" title="Eliminar"
-                            onclick="confirmarEliminar('{{ $r[0] }}', '{{ $r[1] }}', this)">
+                            onclick="confirmarEliminar('{{ $producto->nombre }}', {{ $producto->id_producto }}, this)">
                             <img src="/images/icono-basurero.png" alt="Eliminar">
                         </button>
                     </div>
+
+                    {{-- Form oculto para DELETE --}}
+                    <form id="form-delete-{{ $producto->id_producto }}"
+                          action="{{ route('admin.productos.destroy', $producto->id_producto) }}"
+                          method="POST" style="display:none;">
+                        @csrf
+                        @method('DELETE')
+                    </form>
                 </td>
             </tr>
-            @endforeach
+            @empty
+            <tr>
+                <td colspan="6" class="rv-empty">No hay productos registrados.</td>
+            </tr>
+            @endforelse
         </tbody>
     </table>
 
@@ -355,30 +428,30 @@ $porCiudad = collect($regiones)->groupBy(1)->map->count();
     </div>
 </div>
 
-{{-- ── BOTONES ─────────────────────────────────────── --}}
+{{-- ── BOTONES ──────────────────────────────────────── --}}
 <div class="rv-btn-row">
-    <a href="{{ route('admin.envios.index') }}" class="btn btn-ghost">
-        <img src="/images/icono-regresar.png" alt="">
-        Regresar
+    <a href="{{ route('catalogo.index') }}" class="btn btn-ghost">
+        <img src="/images/icono-region.png" alt="">
+        Ver catálogo público
     </a>
-    <a href="{{ route('admin.regiones.crear') }}" class="btn btn-dark">
+    <a href="{{ route('admin.productos.crear') }}" class="btn btn-dark">
         <img src="/images/icono-agregar.png" alt="">
-        Agregar Región
+        Agregar Producto
     </a>
 </div>
 
-{{-- ── MODAL CONFIRMAR ELIMINAR ────────────────────── --}}
+{{-- ── MODAL ELIMINAR ───────────────────────────────── --}}
 <div class="rv-modal-overlay" id="modalEliminar">
     <div class="rv-modal">
         <div class="rv-modal-header">
             <div class="rv-modal-ico">
                 <img src="/images/icono-basurero.png" alt="">
             </div>
-            <div class="rv-modal-title">Eliminar región</div>
+            <div class="rv-modal-title">Eliminar producto</div>
         </div>
         <div class="rv-modal-body">
-            <p>¿Estás seguro que deseas eliminar la región <strong id="modalRegion"></strong> de <strong id="modalCiudad"></strong>?</p>
-            <p style="margin-top:8px; color: var(--ink-muted);">Esta acción no se puede deshacer.</p>
+            <p>¿Estás seguro que deseas eliminar <strong id="modalNombre"></strong>?</p>
+            <p style="margin-top:8px; color: var(--ink-muted);">Esta acción eliminará también su imagen y no se puede deshacer.</p>
         </div>
         <div class="rv-modal-divider"></div>
         <div class="rv-modal-actions">
@@ -402,75 +475,91 @@ $porCiudad = collect($regiones)->groupBy(1)->map->count();
     opacity:0; transform:translateY(16px);
     transition:opacity .3s ease, transform .3s ease;
     pointer-events:none;">
-    <img src="/images/icono-region.png" alt="" style="width:15px;height:15px;object-fit:contain;filter:brightness(0) invert(1);">
-    <span id="rv-toast-msg">Región eliminada.</span>
+    <span id="rv-toast-msg">Acción realizada.</span>
 </div>
 
 @push('scripts')
 <script>
-// ── Búsqueda ──────────────────────────────────────────
+// ── Búsqueda en tiempo real ────────────────────────────
 function filtrarTabla() {
     const texto = document.getElementById('buscador').value.toLowerCase();
-    const filas = document.querySelectorAll('#tablaBody tr');
+    const filas = document.querySelectorAll('#tablaBody tr[data-nombre]');
     let visibles = 0;
     filas.forEach(fila => {
-        const coincide = fila.innerText.toLowerCase().includes(texto);
+        const coincide =
+            fila.dataset.nombre.includes(texto) ||
+            fila.dataset.tipo.includes(texto) ||
+            fila.innerText.toLowerCase().includes(texto);
         fila.style.display = coincide ? '' : 'none';
         if (coincide) visibles++;
     });
     document.getElementById('rv-empty').style.display = visibles === 0 ? 'block' : 'none';
 }
 
-// ── Ordenar columnas ──────────────────────────────────
+// ── Ordenar ───────────────────────────────────────────
 let sortDir = {};
 function sortTable(col) {
     sortDir[col] = !sortDir[col];
     const tbody = document.getElementById('tablaBody');
-    const filas = Array.from(tbody.querySelectorAll('tr'));
+    const filas = Array.from(tbody.querySelectorAll('tr[data-nombre]'));
     filas.sort((a, b) => {
         const va = a.cells[col].innerText.trim();
         const vb = b.cells[col].innerText.trim();
-        return sortDir[col] ? va.localeCompare(vb, 'es') : vb.localeCompare(va, 'es');
+        const na = parseFloat(va), nb = parseFloat(vb);
+        const cmp = (!isNaN(na) && !isNaN(nb)) ? na - nb : va.localeCompare(vb, 'es');
+        return sortDir[col] ? cmp : -cmp;
     });
     filas.forEach(f => tbody.appendChild(f));
 }
 
 // ── Modal eliminar ────────────────────────────────────
-let pendienteEliminar = null;
+let pendienteId   = null;
+let pendienteFila = null;
 
-function confirmarEliminar(region, ciudad, btn) {
-    const fila = btn.closest('tr');
-    pendienteEliminar = { region, ciudad, fila };
-    document.getElementById('modalRegion').textContent = region;
-    document.getElementById('modalCiudad').textContent = ciudad;
+function confirmarEliminar(nombre, id, btn) {
+    pendienteId   = id;
+    pendienteFila = btn.closest('tr');  // guardar ANTES de abrir modal
+    document.getElementById('modalNombre').textContent = nombre;
     document.getElementById('modalEliminar').classList.add('active');
 }
 
 function cerrarModal() {
     document.getElementById('modalEliminar').classList.remove('active');
-    pendienteEliminar = null;
+    // NO limpiar pendienteId ni pendienteFila aquí
 }
 
 function ejecutarEliminar() {
-    if (!pendienteEliminar) return;
-    cerrarModal();
+    if (!pendienteId) return;
 
-    const fila = pendienteEliminar.fila;
-    fila.style.transition = 'opacity .35s ease, transform .35s ease';
-    fila.style.opacity    = '0';
-    fila.style.transform  = 'translateX(20px)';
+    // Cerrar modal visualmente pero conservar las referencias
+    document.getElementById('modalEliminar').classList.remove('active');
 
-    setTimeout(() => {
-        fila.remove();
-        const total = document.querySelectorAll('#tablaBody tr').length;
-        document.getElementById('rv-badge').textContent = total + ' registros';
-        const empty = document.getElementById('rv-empty');
-        if (total === 0 && empty) empty.style.display = 'block';
-    }, 370);
+    // Animar fila si existe
+    if (pendienteFila) {
+        pendienteFila.style.transition = 'opacity .35s ease, transform .35s ease';
+        pendienteFila.style.opacity    = '0';
+        pendienteFila.style.transform  = 'translateX(20px)';
+    }
 
-    mostrarToast('Región eliminada correctamente.');
-    pendienteEliminar = null;
+    const formId = 'form-delete-' + pendienteId;
+    const form   = document.getElementById(formId);
+
+    if (!form) {
+        console.error('No se encontró el form:', formId);
+        return;
+    }
+
+    setTimeout(() => form.submit(), 370);
+
+    // Limpiar después de disparar
+    pendienteId   = null;
+    pendienteFila = null;
 }
+
+document.getElementById('modalEliminar').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
 
 function mostrarToast(msg) {
     const t = document.getElementById('rv-toast');
@@ -483,12 +572,15 @@ function mostrarToast(msg) {
     }, 3000);
 }
 
+// Mostrar toast si hay flash de éxito (post-redirect)
+@if(session('success'))
+    document.addEventListener('DOMContentLoaded', () => mostrarToast("{{ session('success') }}"));
+@endif
+
 document.getElementById('modalEliminar').addEventListener('click', function(e) {
     if (e.target === this) cerrarModal();
 });
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') cerrarModal();
-});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
 </script>
 @endpush
 
