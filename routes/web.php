@@ -102,18 +102,23 @@ Route::get('/cotizaciones/historial', [CotizacionController::class, 'historial']
 Route::get('/cotizaciones/{id}', [CotizacionController::class, 'show']);
 Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'generarPDF']);
 Route::get('/cotizaciones/{id}/excel', [CotizacionController::class, 'generarExcel']);
+// Reportes y Reportes avanzados (Organizados en grupo)
+Route::prefix('admin/reportes')->name('admin.reportes.')->group(function () {
+    
+    // Esta es la ruta que soluciona tu error: admin.reportes.index
+    Route::get('/', [ReporteController::class, 'index'])->name('index');
 
-// Reportes
-Route::get('/reportes', [ReporteController::class, 'index']);
-Route::get('/api/reportes/metricas', [ReporteController::class, 'metricas']);
-Route::get('/api/reportes/por-fecha', [ReporteController::class, 'porFecha']);
+    // APIs y métricas
+    Route::get('/metricas', [ReporteController::class, 'metricas'])->name('metricas');
+    Route::get('/por-fecha', [ReporteController::class, 'porFecha'])->name('porFecha');
+    Route::get('/filtrado', [ReporteController::class, 'reporteFiltrado'])->name('filtrado');
+    Route::get('/filtros', [ReporteController::class, 'reporteFiltrado'])->name('filtros');
+    
+    // Exportaciones
+    Route::get('/exportar-excel', [ReporteController::class, 'exportarExcel'])->name('exportar.excel');
+    Route::get('/exportar-pdf', [ReporteController::class, 'exportarPdf'])->name('exportar.pdf');
+    Route::get('/exportar-pdf-detallado', [ReporteController::class, 'exportarPdfDetallado'])->name('exportar.pdf.detallado');
 
-// Reportes avanzados
-Route::get('/api/reportes/filtrado', [ReporteController::class, 'reporteFiltrado']);
-Route::get('/api/reportes/filtros', [ReporteController::class, 'reporteFiltrado']); // Para los selectores
-Route::get('/api/reportes/exportar-excel', [ReporteController::class, 'exportarExcel']);
-Route::get('/api/reportes/exportar-pdf', [ReporteController::class, 'exportarPdf']);
-
-// Live updates
-Route::get('/api/reportes/realtime', [ReporteController::class, 'datosRealtime']);
-Route::get('/api/reportes/exportar-pdf-detallado', [ReporteController::class, 'exportarPdfDetallado']);
+    // Live updates
+    Route::get('/realtime', [ReporteController::class, 'datosRealtime'])->name('realtime');
+});

@@ -1,4 +1,4 @@
-<h2>Crear Cuenta - Rayo Verde</h2>
+<h2>Iniciar Sesion - Rayo Verde</h2>
 
 <form action="{{ route('login.post') }}" method="POST">
     @csrf 
