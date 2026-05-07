@@ -37,10 +37,16 @@ Route::get('/admin', function () {
     return view('admin-dashboard');
 })->name('admin.dashboard');
 
-// --- Chatbot ---
+
+
 Route::get('/chatbot', function () {
     return view('chatbot.index'); 
+})->name('chatbot.ui');
+
+Route::get('/chatbot', function () {
+    return view('chatbot.ui'); 
 })->name('chatbot.index');
+
 
 // --- Administración de FAQ (Grupo con Prefijo) ---
 Route::prefix('admin')->group(function () {

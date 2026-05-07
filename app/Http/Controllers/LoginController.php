@@ -34,7 +34,8 @@ class LoginController extends Controller
             Session::put('usuario_nombre', $usuario->nombre);
             Session::put('usuario_rol', $usuario->rol);
 
-            return redirect()->route('dashboard')->with('success', 'Bienvenido al sistema');
+return redirect()->route('home')->with('success', 'Bienvenido al sistema');
+
         }
 
         RateLimiter::hit($key, 60);
