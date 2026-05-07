@@ -7,6 +7,9 @@ use App\Models\Producto;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ReporteExport;
 
 class ReporteController extends Controller
 {
@@ -206,5 +209,103 @@ public function exportarPdf(Request $request)
     
     $pdf = Pdf::loadView('pdf.reporte', compact('cotizaciones', 'fechaInicio', 'fechaFin'));
     return $pdf->download('reporte_cotizaciones.pdf');
+}
+// Exportar reporte detallado a PDF con gráficos
+public function exportarPdfDetallado(Request $request)
+{
+    $fechaInicio = $request->fecha_inicio ?? now()->startOfMonth();
+    $fechaFin = $request->fecha_fin ?? now();
+    
+    // Datos para el reporte
+    $totales = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
+        ->select(
+            DB::raw('COUNT(*) as total_cotizaciones'),
+            DB::raw('SUM(subtotal) as total_ventas'),
+            DB::raw('AVG(subtotal) as promedio'),
+            DB::raw('SUM(descuento_aplicado) as total_descuentos')
+        )
+        ->first();
+    
+    $topProductos = DB::table('detalle_cotizaciones')
+        ->join('productos', 'detalle_cotizaciones.id_producto', '=', 'productos.id_producto')
+        ->join('cotizaciones', 'detalle_cotizaciones.id_cotizacion', '=', 'cotizaciones.id_cotizacion')
+        ->whereBetween('cotizaciones.generado_en', [$fechaInicio, $fechaFin])
+        ->select('productos.nombre', DB::raw('SUM(detalle_cotizaciones.subtotal) as total'))
+        ->groupBy('productos.nombre')
+        ->orderBy('total', 'desc')
+        ->limit(10)
+        ->get();
+    
+    $topClientes = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
+        ->join('clientes', 'cotizaciones.id_cliente', '=', 'clientes.id_cliente')
+        ->select('clientes.empresa', DB::raw('COUNT(*) as total'), DB::raw('SUM(cotizaciones.subtotal) as compras'))
+        ->groupBy('clientes.empresa')
+        ->orderBy('compras', 'desc')
+        ->limit(10)
+        ->get();
+    
+    $evolucion = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
+        ->select(DB::raw('DATE(generado_en) as fecha'), DB::raw('COUNT(*) as total'), DB::raw('SUM(subtotal) as ventas'))
+        ->groupBy(DB::raw('DATE(generado_en)'))
+        ->orderBy('fecha', 'asc')
+        ->get();
+    
+    $cotizaciones = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
+        ->with(['cliente', 'estado'])
+        ->orderBy('generado_en', 'desc')
+        ->get();
+    
+    $pdf = Pdf::loadView('pdf.reporte_detallado', compact(
+        'fechaInicio', 'fechaFin', 'totales', 'topProductos', 
+        'topClientes', 'evolucion', 'cotizaciones'
+    ));
+    
+    return $pdf->download("reporte_{$fechaInicio}_al_{$fechaFin}.pdf");
+}
+
+// Endpoint para datos en tiempo real (polling)
+public function datosRealtime(Request $request)
+{
+    $ultimaActualizacion = $request->ultima_actualizacion;
+    
+    $query = Cotizacion::query();
+    
+    if ($request->fecha_inicio) {
+        $query->whereDate('generado_en', '>=', $request->fecha_inicio);
+    }
+    if ($request->fecha_fin) {
+        $query->whereDate('generado_en', '<=', $request->fecha_fin);
+    }
+    
+    // Solo traer cambios desde la última actualización
+    if ($ultimaActualizacion) {
+        $query->where('updated_at', '>', $ultimaActualizacion)
+              ->orWhere('created_at', '>', $ultimaActualizacion);
+    }
+    
+    $nuevasCotizaciones = $query->with(['cliente', 'estado'])->get();
+    
+    // Métricas actualizadas
+    $metricas = Cotizacion::when($request->fecha_inicio, function($q) use ($request) {
+            $q->whereDate('generado_en', '>=', $request->fecha_inicio);
+        })
+        ->when($request->fecha_fin, function($q) use ($request) {
+            $q->whereDate('generado_en', '<=', $request->fecha_fin);
+        })
+        ->select(
+            DB::raw('COUNT(*) as total_cotizaciones'),
+            DB::raw('SUM(subtotal) as total_ventas'),
+            DB::raw('AVG(subtotal) as promedio'),
+            DB::raw('SUM(descuento_aplicado) as total_descuentos')
+        )
+        ->first();
+    
+    return response()->json([
+        'success' => true,
+        'hay_novedades' => $nuevasCotizaciones->count() > 0,
+        'nuevas_cotizaciones' => $nuevasCotizaciones,
+        'metricas' => $metricas,
+        'timestamp' => now()
+    ]);
 }
 }

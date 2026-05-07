@@ -274,7 +274,93 @@
     
     cargarFiltros();
     cargarReporte();
-</script>
 
+    
+    // ============================================
+// LIVE UPDATES - Actualización en tiempo real
+// ============================================
+let ultimaActualizacion = null;
+let intervaloActualizacion = null;
+
+function iniciarLiveUpdates() {
+    // Actualizar cada 30 segundos
+    intervaloActualizacion = setInterval(verificarNovedades, 30000);
+}
+
+function verificarNovedades() {
+    const params = new URLSearchParams();
+    params.append('ultima_actualizacion', ultimaActualizacion || '');
+    
+    const fechaInicio = document.getElementById('fecha_inicio').value;
+    const fechaFin = document.getElementById('fecha_fin').value;
+    if (fechaInicio) params.append('fecha_inicio', fechaInicio);
+    if (fechaFin) params.append('fecha_fin', fechaFin);
+    
+    fetch(`/api/reportes/realtime?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.hay_novedades) {
+                // Mostrar notificación
+                mostrarNotificacion('📊 ¡Hay nuevos datos! Actualizando reporte...');
+                // Recargar el reporte completo
+                cargarReporte();
+                // Actualizar timestamp
+                ultimaActualizacion = data.timestamp;
+            }
+        });
+}
+
+function mostrarNotificacion(mensaje) {
+    // Crear elemento de notificación
+    const notificacion = document.createElement('div');
+    notificacion.className = 'fixed top-20 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50';
+    notificacion.innerHTML = `<i class="fas fa-sync-alt mr-2"></i>${mensaje}`;
+    document.body.appendChild(notificacion);
+    
+    // Eliminar después de 3 segundos
+    setTimeout(() => notificacion.remove(), 3000);
+}
+
+// Botón de exportar PDF detallado
+function agregarBotonExportarDetallado() {
+    const botonera = document.querySelector('.flex.gap-2.items-end');
+    if (botonera && !document.getElementById('btn-exportar-pdf-detallado')) {
+        const btn = document.createElement('button');
+        btn.id = 'btn-exportar-pdf-detallado';
+        btn.className = 'bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700';
+        btn.innerHTML = '<i class="fas fa-file-pdf"></i> PDF Detallado';
+        btn.onclick = () => {
+            const fechaInicio = document.getElementById('fecha_inicio').value;
+            const fechaFin = document.getElementById('fecha_fin').value;
+            window.location.href = `/api/reportes/exportar-pdf-detallado?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+        };
+        botonera.appendChild(btn);
+    }
+}
+
+// Iniciar live updates cuando la página cargue
+document.addEventListener('DOMContentLoaded', () => {
+    iniciarLiveUpdates();
+    agregarBotonExportarDetallado();
+});
+
+// Limpiar intervalo al salir de la página
+window.addEventListener('beforeunload', () => {
+    if (intervaloActualizacion) {
+        clearInterval(intervaloActualizacion);
+    }
+});
+
+// También actualizar cuando se apliquen filtros
+const btnFiltrarOriginal = document.getElementById('btn-filtrar');
+if (btnFiltrarOriginal) {
+    const nuevoBtn = btnFiltrarOriginal.cloneNode(true);
+    btnFiltrarOriginal.parentNode.replaceChild(nuevoBtn, btnFiltrarOriginal);
+    nuevoBtn.addEventListener('click', () => {
+        ultimaActualizacion = null;
+        cargarReporte();
+    });
+}
+</script>
 </body>
 </html>

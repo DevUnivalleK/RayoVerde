@@ -35,3 +35,7 @@ Route::get('/api/reportes/filtrado', [ReporteController::class, 'reporteFiltrado
 Route::get('/api/reportes/filtros', [ReporteController::class, 'reporteFiltrado']); // Para los selectores
 Route::get('/api/reportes/exportar-excel', [ReporteController::class, 'exportarExcel']);
 Route::get('/api/reportes/exportar-pdf', [ReporteController::class, 'exportarPdf']);
+
+// Live updates
+Route::get('/api/reportes/realtime', [ReporteController::class, 'datosRealtime']);
+Route::get('/api/reportes/exportar-pdf-detallado', [ReporteController::class, 'exportarPdfDetallado']);
