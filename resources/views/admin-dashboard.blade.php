@@ -41,9 +41,9 @@
                 </li>
                 <!-- Opción: FAQ -->
                 <li class="nav-item mb-2">
-                    <a href="#" class="nav-link text-white sidebar-link">
-                        <i class="fas fa-question-circle me-2 text-center" style="width: 20px;"></i> FAQ
-                    </a>
+                    <a href="{{ route('admin.faq.index') }}" class="nav-link text-white sidebar-link active">
+    <i class="fas fa-question-circle me-2"></i> FAQ
+</a>
                 </li>
                 <!-- Opción: Dashboards (Activa por defecto) -->
                 <li class="nav-item mb-2">

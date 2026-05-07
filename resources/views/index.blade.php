@@ -185,10 +185,11 @@
              </div>
     </div>
 
-    <div class="chatbot-floating-btn" onclick="toggleChat()">
-        <i class="fas fa-comments"></i>
-        <span>ChatBot</span>
-    </div>
+    
+    <a href="{{ route('chatbot.index') }}" class="chatbot-floating-btn text-decoration-none">
+    <i class="fas fa-comments"></i>
+    <span>ChatBot</span>
+</a>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('js/notificacion.js') }}"></script>

@@ -170,3 +170,23 @@ h1, h2, h3, h4, h5, h6 {
 .rounded-pulcro {
     border-radius: 15px !important;
 }
+.chatbot-floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: var(--verde-acento); /* El verde de Rayo Verde */
+    color: white;
+    padding: 15px 25px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    transition: transform 0.3s;
+}
+
+.chatbot-floating-btn:hover {
+    transform: scale(1.05);
+    color: white; /* Para que no cambie a azul por ser un link */
+}

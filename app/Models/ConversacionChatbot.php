@@ -10,12 +10,13 @@ class ConversacionChatbot extends Model
     protected $primaryKey = 'id_conversacion';
     public $timestamps = false;
 
-    protected $fillable = [
-        'id_cliente',
-        'finalizada_en',
-        'estado',
-        'derivada_a_agente'
-    ];
+  protected $fillable = [
+    'id_cliente',
+    'finalizada_en',
+    'estado',
+    'derivada_a_agente',
+    'paso_actual' // <--- 
+];
 
     public function cliente()
     {
