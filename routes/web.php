@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CotizacionController;
+use App\Http\Controllers\ReporteController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,5 +19,12 @@ Route::get('/mis-cotizaciones', function () {
 });
 
 // Descargas
+Route::get('/cotizaciones/historial', [CotizacionController::class, 'historial']);
+Route::get('/cotizaciones/{id}', [CotizacionController::class, 'show']);
 Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'generarPDF']);
 Route::get('/cotizaciones/{id}/excel', [CotizacionController::class, 'generarExcel']);
+
+// Reportes
+Route::get('/reportes', [ReporteController::class, 'index']);
+Route::get('/api/reportes/metricas', [ReporteController::class, 'metricas']);
+Route::get('/api/reportes/por-fecha', [ReporteController::class, 'porFecha']);

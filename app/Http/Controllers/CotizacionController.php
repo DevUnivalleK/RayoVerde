@@ -11,22 +11,23 @@ use Illuminate\Support\Facades\Auth;
 
 class CotizacionController extends Controller
 {
-    // Historial de cotizaciones del usuario autenticado
     public function historial()
-    {
-        // Buscar por id_cliente o id_usuario según tu relación
-        $clienteId = Auth::user()->id_cliente ?? Auth::id();
-        
-        $cotizaciones = Cotizacion::where('id_cliente', $clienteId)
-            ->orderBy('generado_en', 'desc')
-            ->get();
-        
-        return response()->json([
-            'success' => true,
-            'data' => $cotizaciones,
-            'total' => $cotizaciones->count()
-        ]);
-    }
+{
+    // Temporalmente usamos un ID de cliente fijo para probar
+    $clienteId = 2; // Cambia a un ID que sepas que tiene cotizaciones
+    
+    $cotizaciones = Cotizacion::where('id_cliente', $clienteId)
+        ->orderBy('generado_en', 'desc')
+        ->get();
+    
+    \Log::info('Cotizaciones encontradas:', ['count' => $cotizaciones->count(), 'data' => $cotizaciones->toArray()]);
+    
+    return response()->json([
+        'success' => true,
+        'data' => $cotizaciones,
+        'total' => $cotizaciones->count()
+    ]);
+}
     
     // Ver detalle de una cotización específica
     public function show($id)
