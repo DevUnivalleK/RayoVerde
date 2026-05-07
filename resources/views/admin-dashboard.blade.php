@@ -57,11 +57,12 @@
                         <i class="fas fa-th-large me-2 text-center" style="width: 20px;"></i> Dashboards
                     </a>
                 </li>
-                <!-- Opción: Reportes -->
-                <li class="nav-item mb-2">
-                    <a href="#" class="nav-link text-white sidebar-link">
-                        <i class="fas fa-chart-bar me-2 text-center" style="width: 20px;"></i> Reportes
-                    </a>
+               <!-- Opción: Reportes Corregida -->
+<li class="nav-item mb-2">
+    <a href="{{ route('admin.reportes.index') }}" class="nav-link text-white sidebar-link active">
+        <i class="fas fa-chart-bar me-2"></i> Reportes
+    </a>
+</li>
                 </li>
                 <!-- Opción: Configuracion Comercial -->
                 <li class="nav-item mb-2">
