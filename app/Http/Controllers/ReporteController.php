@@ -106,4 +106,105 @@ class ReporteController extends Controller
             'data' => $data
         ]);
     }
+    // Reporte con filtros dinámicos
+public function reporteFiltrado(Request $request)
+{
+    $query = Cotizacion::query();
+    
+    // Filtro por fechas
+    if ($request->fecha_inicio) {
+        $query->whereDate('generado_en', '>=', $request->fecha_inicio);
+    }
+    if ($request->fecha_fin) {
+        $query->whereDate('generado_en', '<=', $request->fecha_fin);
+    }
+    
+    // Filtro por cliente
+    if ($request->id_cliente) {
+        $query->where('id_cliente', $request->id_cliente);
+    }
+    
+    // Filtro por estado
+    if ($request->id_estado) {
+        $query->where('id_estado', $request->id_estado);
+    }
+    
+    // Filtro por producto (a través de detalles)
+    if ($request->id_producto) {
+        $query->whereHas('detalles', function($q) use ($request) {
+            $q->where('id_producto', $request->id_producto);
+        });
+    }
+    
+    $cotizaciones = $query->with(['cliente', 'estado', 'detalles.producto'])
+        ->orderBy('generado_en', 'desc')
+        ->get();
+    
+    // Evolución por fecha (para gráfico de líneas)
+    $evolucion = Cotizacion::whereBetween('generado_en', [
+        $request->fecha_inicio ?? now()->startOfMonth(),
+        $request->fecha_fin ?? now()
+    ])
+    ->select(
+        DB::raw('DATE(generado_en) as fecha'),
+        DB::raw('COUNT(*) as total'),
+        DB::raw('SUM(subtotal) as total_ventas')
+    )
+    ->groupBy(DB::raw('DATE(generado_en)'))
+    ->orderBy('fecha', 'asc')
+    ->get();
+    
+    // Lista de clientes para el filtro
+    $clientes = Cliente::all();
+    
+    // Lista de productos para el filtro
+    $productos = Producto::all();
+    
+    // Estados para el filtro
+    $estados = DB::table('estados_cotizacion')->get();
+    
+    return response()->json([
+        'success' => true,
+        'cotizaciones' => $cotizaciones,
+        'evolucion' => $evolucion,
+        'filtros' => [
+            'clientes' => $clientes,
+            'productos' => $productos,
+            'estados' => $estados
+        ],
+        'resumen' => [
+            'total_cotizaciones' => $cotizaciones->count(),
+            'total_ventas' => $cotizaciones->sum('subtotal'),
+            'promedio' => $cotizaciones->avg('subtotal'),
+            'total_descuentos' => $cotizaciones->sum('descuento_aplicado')
+        ]
+    ]);
+}
+
+// Exportar reporte a Excel
+public function exportarExcel(Request $request)
+{
+    $fechaInicio = $request->fecha_inicio ?? now()->startOfMonth();
+    $fechaFin = $request->fecha_fin ?? now();
+    
+    $cotizaciones = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
+        ->with(['cliente', 'estado'])
+        ->get();
+    
+    return Excel::download(new ReporteExport($cotizaciones, $fechaInicio, $fechaFin), 'reporte_cotizaciones.xlsx');
+}
+
+// Exportar reporte a PDF
+public function exportarPdf(Request $request)
+{
+    $fechaInicio = $request->fecha_inicio ?? now()->startOfMonth();
+    $fechaFin = $request->fecha_fin ?? now();
+    
+    $cotizaciones = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
+        ->with(['cliente', 'estado'])
+        ->get();
+    
+    $pdf = Pdf::loadView('pdf.reporte', compact('cotizaciones', 'fechaInicio', 'fechaFin'));
+    return $pdf->download('reporte_cotizaciones.pdf');
+}
 }

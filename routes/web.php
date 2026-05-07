@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\ReporteController;
+use App\Exports\ReporteExport;
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,3 +29,9 @@ Route::get('/cotizaciones/{id}/excel', [CotizacionController::class, 'generarExc
 Route::get('/reportes', [ReporteController::class, 'index']);
 Route::get('/api/reportes/metricas', [ReporteController::class, 'metricas']);
 Route::get('/api/reportes/por-fecha', [ReporteController::class, 'porFecha']);
+
+// Reportes avanzados
+Route::get('/api/reportes/filtrado', [ReporteController::class, 'reporteFiltrado']);
+Route::get('/api/reportes/filtros', [ReporteController::class, 'reporteFiltrado']); // Para los selectores
+Route::get('/api/reportes/exportar-excel', [ReporteController::class, 'exportarExcel']);
+Route::get('/api/reportes/exportar-pdf', [ReporteController::class, 'exportarPdf']);
