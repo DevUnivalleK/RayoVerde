@@ -73,7 +73,7 @@
 
                 <ul class="navbar-nav mb-2 mb-lg-0 align-items-center">
                     <li class="nav-item"><a class="nav-link active fw-semibold" href="{{ url('/') }}">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link fw-semibold" href="#">Productos</a></li>
+                    <li class="nav-item"><a class="nav-link fw-semibold" href="{{ route('catalogo.index') }}">Productos</a></li>
                     <li class="nav-item"><a class="nav-link fw-semibold" href="#">Sobre Nosotros</a></li>
                     <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-shopping-cart text-dark"></i></a></li>
                                                         
@@ -117,7 +117,7 @@
         <div class="mt-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold m-0" style="color: var(--gris-oscuro);">Nuestros Aceites Destacados</h3>
-                <a href="#" class="text-success text-decoration-none fw-bold">Ver catálogo completo <i class="fas fa-arrow-right ms-1"></i></a>
+                <a href="{{ route('catalogo.index') }}" class="text-success text-decoration-none fw-bold">Ver catálogo completo <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
             
             <div class="row g-4">
@@ -156,8 +156,7 @@
                     <h6 class="fw-bold">Navegación</h6>
                     <ul class="list-unstyled mt-3">
                         <li><a href="#" class="small">Inicio</a></li>
-                        <li><a href="#" class="small">Productos</a></li>
-                    </ul>
+<li><a href="{{ route('catalogo.index') }}" class="small">Productos</a></li>                    </ul>
                 </div>
                 <div class="col-md-3 mb-4">
                     <h6 class="fw-bold">Contacto</h6>
