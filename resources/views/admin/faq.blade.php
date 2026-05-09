@@ -24,7 +24,7 @@
                         <i class="fas fa-question-circle me-2 text-center" style="width: 20px;"></i> FAQ
                     </a>
                 </li>
-                </ul>
+            </ul>
         </div>
 
         <div class="flex-grow-1 p-4">
@@ -37,6 +37,13 @@
                     <i class="fas fa-plus me-2"></i> Nueva Pregunta
                 </button>
             </header>
+
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
+                    <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            @endif
 
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
@@ -57,8 +64,20 @@
                                     <td class="fw-bold">{{ $faq->pregunta }}</td>
                                     <td class="text-truncate" style="max-width: 300px;">{{ $faq->respuesta }}</td>
                                     <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" data-bs-target="#modalEditFaq"
+                                                onclick="prepararEdicion({{ json_encode($faq) }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+
+                                        <form action="{{ route('admin.faq.destroy', $faq->id_faq) }}" method="POST" class="d-inline" 
+                                              onsubmit="return confirm('¿Estás seguro de eliminar esta pregunta?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -105,6 +124,55 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalEditFaq" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="formEditFaq" method="POST" class="modal-content">
+                @csrf
+                @method('PUT')
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Editar FAQ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Categoría</label>
+                        <select name="categoria" id="edit_categoria" class="form-select" required>
+                            <option value="General">General</option>
+                            <option value="Pedidos">Pedidos</option>
+                            <option value="Pagos">Pagos</option>
+                            <option value="Envíos">Envíos</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Pregunta</label>
+                        <input type="text" name="pregunta" id="edit_pregunta" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Respuesta</label>
+                        <textarea name="respuesta" id="edit_respuesta" class="form-control" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function prepararEdicion(faq) {
+            // Actualizar la URL del formulario dinámicamente
+            const form = document.getElementById('formEditFaq');
+            form.action = `/admin/faq/${faq.id_faq}`;
+
+            // Llenar los campos del modal
+            document.getElementById('edit_categoria').value = faq.categoria;
+            document.getElementById('edit_pregunta').value = faq.pregunta;
+            document.getElementById('edit_respuesta').value = faq.respuesta;
+        }
+    </script>
 </body>
 </html>
