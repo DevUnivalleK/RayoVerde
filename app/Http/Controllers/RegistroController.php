@@ -15,6 +15,7 @@ class RegistroController extends Controller
             'apellido' => 'required|string|max:255',
             'correo' => 'required|string|email|max:255|unique:usuarios,correo',
             'password' => 'required|string|min:8|confirmed',
+            'respuesta_secreta' => 'required|string|max:255'
         ]);
 
         Usuario::create([
@@ -22,8 +23,10 @@ class RegistroController extends Controller
             'apellido'      => $request->apellido,
             'correo'        => $request->correo,
             'password_hash' => Hash::make($request->password), 
+           // 'password_hash' => Hash::make($request->password), 
            // 'rol'           => 'cliente', 
-            'activo'        => true,     
+            'activo'        => true,
+            'respuesta_secreta' => $request->respuesta_secreta    
         ]);
 
         return redirect()->route('login')->with('success', 'Cuenta creada con éxito.');

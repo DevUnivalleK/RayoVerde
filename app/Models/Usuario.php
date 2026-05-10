@@ -16,7 +16,8 @@ class Usuario extends Model
         'correo',
         'password_hash',
         'rol',
-        'activo'
+        'activo',
+        'respuesta_secreta'
     ];
 
     public function cliente()
