@@ -27,6 +27,7 @@ class LoginController extends Controller
         $usuario = Usuario::where('correo', $request->correo)->first();
 
         if ($usuario && Hash::check($request->password, $usuario->password_hash)) {
+            //if ($usuario && Hash::check($request->password, $usuario->password_hash)) {
             
             RateLimiter::clear($key);
 

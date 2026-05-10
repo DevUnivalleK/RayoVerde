@@ -103,27 +103,20 @@
 
 <div class="login-card">
     <span class="brand-logo">Rayo Verde</span>
-    <h2 style="font-size: 1.2rem; color: #2d3748; margin-bottom: 30px;">Iniciar Sesión</h2>
+    <h2 style="font-size: 1.2rem; color: #2d3748; margin-bottom: 30px;">Recuperar Contraseña</h2>
 
-    <form action="{{ route('login.post') }}" method="POST">
+    <form action="{{ route('password.recover') }}" method="POST">
         @csrf 
         <div class="form-group">
-            <label class="form-label">Correo Electrónico</label>
-            <input type="email" name="correo" class="form-control" required placeholder="ejemplo@correo.com">
+            <label class="form-label">Respuesta Secreta</label>
+            <input type="text" name="respuesta_secreta" class="form-control" required placeholder="">
         </div>
 
         <div class="form-group">
-            <label class="form-label">Contraseña</label>
+            <label class="form-label">Nueva Contraseña</label>
             <input type="password" name="password" class="form-control" required placeholder="••••••••">
         </div>
 
-        <button type="submit" class="btn-login">INGRESAR</button>
+        <button type="submit" class="btn-login">Cambiar Contraseña</button>
     </form>
-
-    <p class="footer-text">
-        ¿No tienes cuenta? <a href="{{ route('registro') }}">Regístrate aquí</a>
-    </p>
-    <p class="footer-text">
-        ¿Olvidaste la contraseña? <a href="{{ route('password') }}">Cambiar Contraseña</a>
-    </p>
 </div>

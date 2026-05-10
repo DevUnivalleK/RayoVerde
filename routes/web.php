@@ -14,6 +14,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProductoCatalogoController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\VentaController;
+use App\Http\Controllers\PasswordRecoverController;
 
 // --- Rutas de Inicio ---
 Route::get('/', function () {
@@ -24,6 +25,12 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
+
+Route::get('/password', function () {
+    return view('auth.password');
+})->name('password');
+
+Route::post('/password', [PasswordRecoverController::class, 'passwordRecover'])->name('password.recover');
 
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
