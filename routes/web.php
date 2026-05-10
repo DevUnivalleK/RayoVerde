@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\ReporteController;
 use App\Exports\ReporteExport;
-
+use App\Http\Controllers\ChatbotWebhookController;
 // Controladores de Autenticación y FAQ
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\RegistroController;
@@ -54,13 +54,11 @@ Route::get('/admin', function () {
 })->name('admin.dashboard');
 
 // --- Chatbot (Rutas Duales) ---
-Route::get('/chatbot-ui', function () {
-    return view('chatbot.index'); 
-})->name('chatbot.ui');
-
 Route::get('/chatbot', function () {
     return view('chatbot.ui'); 
 })->name('chatbot.index');
+
+Route::post('/chatbot/webhook', [ChatbotWebhookController::class, 'handle'])->name('chatbot.webhook');
 
 // --- Catálogo Público ---
 Route::get('/catalogo', [ProductoCatalogoController::class, 'index'])->name('catalogo.index');
