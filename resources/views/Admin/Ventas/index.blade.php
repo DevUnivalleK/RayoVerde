@@ -17,13 +17,6 @@ $productoTop   = $ventas->groupBy('id_producto')->map->sum('monto')->sortDesc()-
 
 {{-- ── HERO ─────────────────────────────────────────── --}}
 <div class="rv-hero">
-    <div class="rv-hero-top">
-        <div class="rv-logo"><img src="/images/logo.png" alt="Rayo Verde"></div>
-        <div>
-            <div class="rv-brand-name">Rayo Verde</div>
-            <div class="rv-brand-sub">Panel Administrativo</div>
-        </div>
-    </div>
     <div class="rv-hero-body">
         <div class="rv-hero-eyebrow">Finanzas</div>
         <h1>Ventas y <em>Pagos</em></h1>
