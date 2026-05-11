@@ -1,5 +1,7 @@
-@extends('layout')
-@section('title', 'Gestionar Productos — Rayo Verde')
+@extends('layouts.admin-sidebar')
+
+@section('title', 'Productos')
+@section('breadcrumb', 'Productos')
 
 @push('styles')
 <style>
@@ -58,21 +60,7 @@ body { font-family: 'Sora', sans-serif; background: var(--surface); color: var(-
     width: 260px; height: 260px; border-radius: 50%;
     border: 40px solid rgba(255,255,255,0.04);
 }
-.rv-hero-top { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; position: relative; }
-.rv-logo {
-    width: 48px; height: 48px; border-radius: 12px;
-    background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25);
-    display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
-}
-.rv-logo img { width: 100%; height: 100%; object-fit: contain; }
-.rv-brand-name { font-family: 'Instrument Serif', serif; font-size: 20px; color: #fff; letter-spacing: -0.3px; }
-.rv-brand-sub { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
-.rv-hero-body { position: relative; margin-bottom: 32px; }
-.rv-hero-eyebrow {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--green-400); margin-bottom: 10px;
-}
+
 .rv-hero-eyebrow::before { content: ''; display: block; width: 20px; height: 1.5px; background: var(--green-400); }
 .rv-hero h1 {
     font-family: 'Instrument Serif', serif;
@@ -284,18 +272,9 @@ $noDisp = 0;
 
 {{-- ── HERO ─────────────────────────────────────────── --}}
 <div class="rv-hero">
-    <div class="rv-hero-top">
-        <div class="rv-logo">
-            <img src="/images/logo.png" alt="Rayo Verde">
-        </div>
-        <div>
-            <div class="rv-brand-name">Rayo Verde</div>
-            <div class="rv-brand-sub">Panel Administrativo</div>
-        </div>
-    </div>
+    
 
     <div class="rv-hero-body">
-        <div class="rv-hero-eyebrow">Catálogo</div>
         <h1>Gestionar <em>Productos</em></h1>
         <p>Administra el catálogo de aceites, precios e imágenes</p>
     </div>
