@@ -52,6 +52,43 @@ class ChatbotWebhookController extends Controller
                 }
                 break;
 
+
+   case 'ESPERANDO_FAQ':
+    $preguntas = DB::table('chatbot_faqs')->orderBy('id_faq', 'asc')->get();
+    $idx = (int)$userMessage - 1;
+
+    if (isset($preguntas[$idx])) {
+        $faq = $preguntas[$idx];
+        DB::table('chatbot_faqs')->where('id_faq', $faq->id_faq)->increment('contador_uso');
+        
+        $reply = "" . $faq->respuesta . "\n\n1. Ver otras dudas\n2. Hablar con un Asesor\n3. Volver al menu principal";
+        $nuevoEstado = 'FAQ_CONTESTADA';
+    } 
+    // Si elige la opcion extra (Asesor) que es el ultimo numero + 1
+    elseif ($userMessage == (count($preguntas) + 1)) {
+        return response()->json([
+            'reply' => 'Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.',
+            'redirect' => route('home') 
+        ]);
+    } else {
+        $nuevoEstado = 'ESPERANDO_FAQ'; // Se mantiene para reintentar
+    }
+    break;
+
+case 'FAQ_CONTESTADA':
+    if ($userMessage == '1') {
+        $nuevoEstado = 'ESPERANDO_FAQ';
+    } elseif ($userMessage == '2') {
+        return response()->json([
+            'reply' => 'Redirigiendo con un asesor...',
+            'redirect' => route('home')
+        ]);
+    } else {
+        $nuevoEstado = 'INICIO';
+    }
+    break;
+
+
             case 'SOLICITAR_PRODUCTO':
                 $productos = DB::table('productos')->get();
                 $idx = (int)$userMessage - 1;
@@ -90,7 +127,7 @@ class ChatbotWebhookController extends Controller
                     $nuevoEstado = 'ERROR_CANTIDAD_MINIMA';
                     $msgMinimo = ($uniBase == 'ml') ? "{$valBase}ml" : "{$valBase}L";
                     
-                    $reply = "⚠️ Cantidad insuficiente. El mínimo para este producto es de *{$msgMinimo}*.\n\n" .
+                    $reply = "Cantidad insuficiente. El mínimo para este producto es de *{$msgMinimo}*.\n\n" .
                              "Tu ingreso: {$cantUser}{$uniUser}\n\n" .
                              "¿Qué deseas hacer?\n1. Intentar con otra cantidad (Ej: 1.5 o 500)\n2. Cancelar y volver al menú";
                     
@@ -132,65 +169,119 @@ class ChatbotWebhookController extends Controller
                 break;
         }
 
-        // 4. Generación de Respuesta Final
-        DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->update(['paso_actual' => $nuevoEstado]);
-        $paso = DB::table('chatbot_pasos')->where('estado_actual', $nuevoEstado)->first();
-        $reply = $paso->mensaje_bot ?? "Selecciona una opción:";
 
-        // Actualización de mensaje para el Menú de Inicio
+       // 4. Generación de Respuesta Final
+        DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->update(['paso_actual' => $nuevoEstado]);
+        
+        $paso = DB::table('chatbot_pasos')->where('estado_actual', $nuevoEstado)->first();
+        
+        if (!in_array($nuevoEstado, ['ESPERANDO_FAQ', 'FAQ_CONTESTADA'])) {
+            $reply = $paso->mensaje_bot ?? "Selecciona una opción:";
+        }
+
+        
         if ($nuevoEstado == 'INICIO' || $nuevoEstado == 'ESPERANDO_MENU') {
             $reply = "¡Hola! Soy el asistente de Rayo Verde. Selecciona una opción:\n1. Nueva Cotización\n2. Preguntas Frecuentes\n3. Hablar con un Asesor";
         }
+        elseif ($nuevoEstado == 'ESPERANDO_FAQ') {
+            $faqs = DB::table('chatbot_faqs')->orderBy('id_faq', 'asc')->get();
+            $reply = "Preguntas Frecuentes\nSelecciona el numero de tu duda:\n\n";
+            
+            $i = 1;
+            foreach ($faqs as $f) {
+                $reply .= $i . ". " . $f->pregunta . "\n";
+                $i++;
+            }
+            
+            $reply .= $i . ". No veo mi duda (Hablar con un asesor)\n\n";
+            $reply .= "O escribe Volver para el menu principal.";
+        }
+        elseif ($nuevoEstado == 'FAQ_CONTESTADA') {
+            if (!isset($reply)) {
+                $reply = "Selecciona una opcion para continuar:";
+            }
+        }
         elseif ($nuevoEstado == 'SOLICITAR_PRODUCTO') {
             $prods = DB::table('productos')->get();
-            $reply = "🌿 *Selecciona un producto:*\n";
+            $reply = "Selecciona un producto:\n";
             foreach ($prods as $i => $p) $reply .= ($i + 1) . ". " . $p->nombre . " (Bs. " . $p->precio . ")\n";
         } 
         elseif ($nuevoEstado == 'MOSTRAR_RESUMEN') {
             $carrito = session('carrito_chatbot', []);
-            $res = "📋 *RESUMEN DE COTIZACIÓN*\n\n";
+            $res = "RESUMEN DE COTIZACION\n\n";
             $total = 0;
             foreach ($carrito as $c) {
-                $res .= "• {$c['nombre']}\n  {$c['cant']} {$c['uni']} → *Bs. " . number_format($c['sub'], 2) . "*\n\n";
+                $res .= "- {$c['nombre']}\n  {$c['cant']} {$c['uni']} -> Bs. " . number_format($c['sub'], 2) . "\n\n";
                 $total += $c['sub'];
             }
-            $reply = $res . "━━━━━━━━━━━━━━\n*TOTAL: Bs. " . number_format($total, 2) . "*\n\n1. Confirmar y Guardar\n2. Cancelar todo";
+            $reply = $res . "----------\nTOTAL: Bs. " . number_format($total, 2) . "\n\n1. Confirmar y pasar a finalizar la Compra\n2. Cancelar todo";
         }
         elseif ($nuevoEstado == 'SOLICITAR_CANTIDAD') {
             $uni = session('temp_unidad');
-            $reply = "Indica la cantidad que deseas en *{$uni}*:\n(Ej: " . ($uni == 'L' ? "1.5 o 1,2" : "250") . ")";
+            $reply = "Indica la cantidad que deseas en " . $uni . ":\n(Ej: " . ($uni == 'L' ? "1.5 o 1.2" : "250") . ")";
         }
 
         return response()->json(['reply' => $reply, 'id_conversacion' => $idConversacion]);
     }
 
     private function finalizarCotizacion($id) {
-        $carrito = session('carrito_chatbot', []);
-        if (empty($carrito)) return response()->json(['reply' => 'El carrito está vacío.', 'redirect' => route('home')]);
+    $carrito = session('carrito_chatbot', []);
+    
+    if (empty($carrito)) {
+        return response()->json(['reply' => 'El carrito esta vacio.', 'redirect' => route('home')]);
+    }
 
-        $total = array_sum(array_column($carrito, 'sub'));
+    $total = 0;
+    foreach ($carrito as $item) {
+        $total += (float)$item['sub'];
+    }
 
-        DB::transaction(function () use ($total, $carrito) {
+    $idUsuarioLogueado = session('usuario_id');
+
+    if (!$idUsuarioLogueado) {
+        return response()->json([
+            'reply' => 'Para finalizar la cotizacion, por favor inicia sesion en Rayo Verde.',
+            'redirect' => route('login')
+        ]);
+    }
+
+    try {
+        DB::transaction(function () use ($total, $carrito, $idUsuarioLogueado) {
+            // 1. Insertar Cabecera en la tabla cotizaciones
             $cotId = DB::table('cotizaciones')->insertGetId([
                 'codigo' => 'COT-' . strtoupper(uniqid()),
-                'id_cliente' => session('usuario_id') ?? 1,
+                'id_usuario' => $idUsuarioLogueado, // <--- Cambio a id_usuario
                 'id_estado' => 1,
                 'total' => $total,
                 'generado_en' => now()
             ], 'id_cotizacion');
 
+            // 2. Insertar Detalles
             foreach ($carrito as $item) {
-                DB::table('detalles_cotizaciones')->insert([
+                DB::table('detalle_cotizaciones')->insert([
                     'id_cotizacion' => $cotId,
-                    'id_producto' => $item['id_prod'],
-                    'volumen_litros' => ($item['uni'] == 'ml' ? $item['cant'] / 1000 : $item['cant']),
-                    'precio_unitario' => $item['sub'] / ($item['cant'] == 0 ? 1 : $item['cant']),
-                    'subtotal' => $item['sub']
+                    'id_producto'   => $item['id_prod'],
+                    'volumen_litros'=> (float)($item['uni'] == 'ml' ? $item['cant'] / 1000 : $item['cant']),
+                    'precio_unitario' => (float)($item['sub'] / ($item['cant'] == 0 ? 1 : $item['cant'])),
+                    'subtotal'      => (float)$item['sub']
                 ]);
             }
         });
 
+        // Limpiar sesion del chatbot
         session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
-        return response()->json(['reply' => '✅ ¡Cotización guardada exitosamente!', 'redirect' => route('home')]);
+        
+        return response()->json([
+            'reply' => 'Cotizacion guardada exitosamente. Redirigiendolo a la seccion de compra.',
+            'redirect' => route('home')
+        ]);
+
+    } catch (\Exception $e) {
+        // En produccion quita el $e->getMessage() para no mostrar detalles tecnicos al cliente
+        return response()->json([
+            'reply' => 'Error en el servidor al procesar la base de datos.',
+            'id_conversacion' => $id
+        ]);
     }
+}
 }
