@@ -2,7 +2,7 @@
 @section('title', 'Ventas y Pagos — Rayo Verde')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/ventas.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/estilosDash.css') }}">
 @endpush
 
 @section('content')
@@ -18,7 +18,6 @@ $productoTop   = $ventas->groupBy('id_producto')->map->sum('monto')->sortDesc()-
 {{-- ── HERO ─────────────────────────────────────────── --}}
 <div class="rv-hero">
     <div class="rv-hero-body">
-        <div class="rv-hero-eyebrow">Finanzas</div>
         <h1>Ventas y <em>Pagos</em></h1>
         <p>Registro de ventas por producto y seguimiento de ingresos</p>
     </div>

@@ -4,7 +4,7 @@
 @section('breadcrumb', 'Productos')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/productos.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/estilosDash.css') }}">
 @endpush
 
 @section('content')
