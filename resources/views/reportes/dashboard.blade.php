@@ -21,7 +21,7 @@
     <div class="flex space-x-6 mb-6 border-b pb-2">
         <a href="/" class="text-gray-500">Inicio</a>
         <a href="/mis-cotizaciones" class="text-gray-500">Mis Cotizaciones</a>
-        <a href="/reportes" class="text-green-700 font-semibold border-b-2 border-green-700 pb-2">Dashboard</a>
+        <a href="/admin/reportes" class="text-green-700 font-semibold border-b-2 border-green-700 pb-2">Dashboard</a>
         <a href="#" class="text-gray-500 ml-auto">Cerrar Sesión</a>
     </div>
 
@@ -127,28 +127,37 @@
 
 <script>
     let chartEvolucion, chartProductos;
-    
+    let ultimaActualizacion = null;
+    let intervaloActualizacion = null;
+
     function cargarFiltros() {
-        fetch('/api/reportes/filtros')
+        fetch('/admin/reportes/filtros')
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (data.success && data.filtros) {
                     const clienteSelect = document.getElementById('filtro_cliente');
-                    data.filtros.clientes.forEach(c => {
-                        clienteSelect.innerHTML += `<option value="${c.id_cliente}">${c.empresa}</option>`;
-                    });
+                    if (data.filtros.clientes) {
+                        data.filtros.clientes.forEach(c => {
+                            clienteSelect.innerHTML += `<option value="${c.id_cliente}">${c.empresa || c.nombre}</option>`;
+                        });
+                    }
                     
                     const productoSelect = document.getElementById('filtro_producto');
-                    data.filtros.productos.forEach(p => {
-                        productoSelect.innerHTML += `<option value="${p.id_producto}">${p.nombre}</option>`;
-                    });
+                    if (data.filtros.productos) {
+                        data.filtros.productos.forEach(p => {
+                            productoSelect.innerHTML += `<option value="${p.id_producto}">${p.nombre}</option>`;
+                        });
+                    }
                     
                     const estadoSelect = document.getElementById('filtro_estado');
-                    data.filtros.estados.forEach(e => {
-                        estadoSelect.innerHTML += `<option value="${e.id_estado}">${e.nombre_estado}</option>`;
-                    });
+                    if (data.filtros.estados) {
+                        data.filtros.estados.forEach(e => {
+                            estadoSelect.innerHTML += `<option value="${e.id_estado}">${e.nombre_estado}</option>`;
+                        });
+                    }
                 }
-            });
+            })
+            .catch(error => console.error('Error cargando filtros:', error));
     }
     
     function cargarReporte() {
@@ -166,50 +175,70 @@
         if (idProducto) params.append('id_producto', idProducto);
         if (idEstado) params.append('id_estado', idEstado);
         
-        fetch(`/api/reportes/filtrado?${params.toString()}`)
+        fetch(`/admin/reportes/filtrado?${params.toString()}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    document.getElementById('total_cotizaciones').innerText = data.resumen.total_cotizaciones;
-                    document.getElementById('total_ventas').innerText = `$${data.resumen.total_ventas || 0}`;
-                    document.getElementById('promedio_venta').innerText = `$${data.resumen.promedio || 0}`;
-                    document.getElementById('total_descuentos').innerText = `$${data.resumen.total_descuentos || 0}`;
+                    if (data.resumen) {
+                        document.getElementById('total_cotizaciones').innerText = data.resumen.total_cotizaciones || 0;
+                        document.getElementById('total_ventas').innerText = `$${data.resumen.total_ventas || 0}`;
+                        document.getElementById('promedio_venta').innerText = `$${data.resumen.promedio || 0}`;
+                        document.getElementById('total_descuentos').innerText = `$${data.resumen.total_descuentos || 0}`;
+                    }
                     
-                    actualizarGraficoEvolucion(data.evolucion);
-                    actualizarGraficoProductos(data.cotizaciones);
-                    actualizarTabla(data.cotizaciones);
+                    if (data.evolucion && data.evolucion.length > 0) {
+                        actualizarGraficoEvolucion(data.evolucion);
+                    }
+                    
+                    if (data.cotizaciones) {
+                        actualizarGraficoProductos(data.cotizaciones);
+                        actualizarTabla(data.cotizaciones);
+                    }
                 }
-            });
+            })
+            .catch(error => console.error('Error cargando reporte:', error));
     }
     
     function actualizarGraficoEvolucion(evolucion) {
         const ctx = document.getElementById('chartEvolucion').getContext('2d');
         if (chartEvolucion) chartEvolucion.destroy();
         
+        const fechas = evolucion.map(e => e.fecha);
+        const totales = evolucion.map(e => e.total);
+        
         chartEvolucion = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: evolucion.map(e => e.fecha),
+                labels: fechas,
                 datasets: [
                     {
                         label: 'N° Cotizaciones',
-                        data: evolucion.map(e => e.total),
+                        data: totales,
                         borderColor: '#006c0f',
                         backgroundColor: 'rgba(0,108,15,0.1)',
-                        fill: true
+                        fill: true,
+                        tension: 0.3
                     }
                 ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'top' }
+                }
             }
         });
     }
     
     function actualizarGraficoProductos(cotizaciones) {
         const productos = {};
+        
         cotizaciones.forEach(c => {
-            if (c.detalles) {
+            if (c.detalles && c.detalles.length > 0) {
                 c.detalles.forEach(d => {
                     const nombre = d.producto?.nombre || 'Producto';
-                    productos[nombre] = (productos[nombre] || 0) + d.subtotal;
+                    productos[nombre] = (productos[nombre] || 0) + (parseFloat(d.subtotal) || 0);
                 });
             }
         });
@@ -217,38 +246,62 @@
         const ctx = document.getElementById('chartProductos').getContext('2d');
         if (chartProductos) chartProductos.destroy();
         
+        const labels = Object.keys(productos).slice(0, 5);
+        const valores = Object.values(productos).slice(0, 5);
+        
         chartProductos = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: Object.keys(productos).slice(0, 5),
+                labels: labels,
                 datasets: [{
                     label: 'Ventas ($)',
-                    data: Object.values(productos).slice(0, 5),
+                    data: valores,
                     backgroundColor: '#64b863',
                     borderRadius: 5
                 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'top' }
+                }
             }
         });
     }
     
     function actualizarTabla(cotizaciones) {
         const tbody = document.getElementById('tabla-cotizaciones');
-        if (cotizaciones.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No hay cotizaciones</td></tr>';
+        if (!cotizaciones || cotizaciones.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No hay cotizaciones</td>' . ';
             return;
         }
         
         tbody.innerHTML = cotizaciones.map(c => `
             <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 font-mono text-sm">${c.codigo}</td>
-                <td class="px-4 py-3 text-sm">${new Date(c.generado_en).toLocaleDateString()}</td>
-                <td class="px-4 py-3 text-sm">${c.cliente?.empresa || 'N/A'}</td>
-                <td class="px-4 py-3 text-sm">$${c.subtotal}</td>
-                <td class="px-4 py-3 text-sm">$${c.descuento_aplicado}</td>
-                <td class="px-4 py-3 text-sm font-bold">$${c.total}</td>
-                <td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">${c.estado?.nombre_estado || 'Pendiente'}</span></td>
-            </tr>
+                <td class="px-4 py-3 font-mono text-sm">${c.codigo || '-'}${c.codigo || '-'}_
+                <td class="px-4 py-3 text-sm">${c.generado_en ? new Date(c.generado_en).toLocaleDateString() : '-'}${c.generado_en ? new Date(c.generado_en).toLocaleDateString() : '-'}_
+                <td class="px-4 py-3 text-sm">${c.cliente?.empresa || c.cliente?.nombre || 'N/A'}${c.cliente?.empresa || c.cliente?.nombre || 'N/A'}_
+                <td class="px-4 py-3 text-sm">$${parseFloat(c.subtotal || 0).toFixed(2)}${parseFloat(c.subtotal || 0).toFixed(2)}_
+                <td class="px-4 py-3 text-sm">$${parseFloat(c.descuento_aplicado || 0).toFixed(2)}${parseFloat(c.descuento_aplicado || 0).toFixed(2)}_
+                <td class="px-4 py-3 text-sm font-bold">$${parseFloat(c.total || 0).toFixed(2)}${parseFloat(c.total || 0).toFixed(2)}_
+                <td class="px-4 py-3">
+                    <span class="px-2 py-1 text-xs rounded-full ${getEstadoClass(c.id_estado)}">
+                        ${getEstadoTexto(c.id_estado)}
+                    </span>
+                 </td>
+             </tr>
         `).join('');
+    }
+
+    function getEstadoClass(idEstado) {
+        const estados = {1: 'bg-yellow-100 text-yellow-800', 2: 'bg-green-100 text-green-800', 3: 'bg-red-100 text-red-800'};
+        return estados[idEstado] || 'bg-gray-100 text-gray-800';
+    }
+
+    function getEstadoTexto(idEstado) {
+        const estados = {1: 'Pendiente', 2: 'Aprobada', 3: 'Rechazada', 4: 'Expirada'};
+        return estados[idEstado] || 'Desconocido';
     }
     
     // Configurar fechas por defecto
@@ -258,109 +311,93 @@
     document.getElementById('fecha_inicio').valueAsDate = hace30Dias;
     document.getElementById('fecha_fin').valueAsDate = hoy;
     
+    // Eventos de botones
     document.getElementById('btn-filtrar').addEventListener('click', cargarReporte);
+    
     document.getElementById('btn-exportar-excel').addEventListener('click', () => {
         const params = new URLSearchParams();
-        params.append('fecha_inicio', document.getElementById('fecha_inicio').value);
-        params.append('fecha_fin', document.getElementById('fecha_fin').value);
-        window.location.href = `/api/reportes/exportar-excel?${params.toString()}`;
+        if (document.getElementById('fecha_inicio').value) params.append('fecha_inicio', document.getElementById('fecha_inicio').value);
+        if (document.getElementById('fecha_fin').value) params.append('fecha_fin', document.getElementById('fecha_fin').value);
+        if (document.getElementById('filtro_cliente').value) params.append('id_cliente', document.getElementById('filtro_cliente').value);
+        if (document.getElementById('filtro_producto').value) params.append('id_producto', document.getElementById('filtro_producto').value);
+        if (document.getElementById('filtro_estado').value) params.append('id_estado', document.getElementById('filtro_estado').value);
+        window.location.href = `/admin/reportes/exportar-excel?${params.toString()}`;
     });
+    
     document.getElementById('btn-exportar-pdf').addEventListener('click', () => {
         const params = new URLSearchParams();
-        params.append('fecha_inicio', document.getElementById('fecha_inicio').value);
-        params.append('fecha_fin', document.getElementById('fecha_fin').value);
-        window.location.href = `/api/reportes/exportar-pdf?${params.toString()}`;
+        if (document.getElementById('fecha_inicio').value) params.append('fecha_inicio', document.getElementById('fecha_inicio').value);
+        if (document.getElementById('fecha_fin').value) params.append('fecha_fin', document.getElementById('fecha_fin').value);
+        if (document.getElementById('filtro_cliente').value) params.append('id_cliente', document.getElementById('filtro_cliente').value);
+        if (document.getElementById('filtro_producto').value) params.append('id_producto', document.getElementById('filtro_producto').value);
+        if (document.getElementById('filtro_estado').value) params.append('id_estado', document.getElementById('filtro_estado').value);
+        window.location.href = `/admin/reportes/exportar-pdf?${params.toString()}`;
     });
     
-    cargarFiltros();
-    cargarReporte();
-
-    
-    // ============================================
-// LIVE UPDATES - Actualización en tiempo real
-// ============================================
-let ultimaActualizacion = null;
-let intervaloActualizacion = null;
-
-function iniciarLiveUpdates() {
-    // Actualizar cada 30 segundos
-    intervaloActualizacion = setInterval(verificarNovedades, 30000);
-}
-
-function verificarNovedades() {
-    const params = new URLSearchParams();
-    params.append('ultima_actualizacion', ultimaActualizacion || '');
-    
-    const fechaInicio = document.getElementById('fecha_inicio').value;
-    const fechaFin = document.getElementById('fecha_fin').value;
-    if (fechaInicio) params.append('fecha_inicio', fechaInicio);
-    if (fechaFin) params.append('fecha_fin', fechaFin);
-    
-    fetch(`/api/reportes/realtime?${params.toString()}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.hay_novedades) {
-                // Mostrar notificación
-                mostrarNotificacion('📊 ¡Hay nuevos datos! Actualizando reporte...');
-                // Recargar el reporte completo
-                cargarReporte();
-                // Actualizar timestamp
-                ultimaActualizacion = data.timestamp;
-            }
-        });
-}
-
-function mostrarNotificacion(mensaje) {
-    // Crear elemento de notificación
-    const notificacion = document.createElement('div');
-    notificacion.className = 'fixed top-20 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50';
-    notificacion.innerHTML = `<i class="fas fa-sync-alt mr-2"></i>${mensaje}`;
-    document.body.appendChild(notificacion);
-    
-    // Eliminar después de 3 segundos
-    setTimeout(() => notificacion.remove(), 3000);
-}
-
-// Botón de exportar PDF detallado
-function agregarBotonExportarDetallado() {
-    const botonera = document.querySelector('.flex.gap-2.items-end');
-    if (botonera && !document.getElementById('btn-exportar-pdf-detallado')) {
-        const btn = document.createElement('button');
-        btn.id = 'btn-exportar-pdf-detallado';
-        btn.className = 'bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700';
-        btn.innerHTML = '<i class="fas fa-file-pdf"></i> PDF Detallado';
-        btn.onclick = () => {
-            const fechaInicio = document.getElementById('fecha_inicio').value;
-            const fechaFin = document.getElementById('fecha_fin').value;
-            window.location.href = `/api/reportes/exportar-pdf-detallado?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
-        };
-        botonera.appendChild(btn);
+    // Botón PDF Detallado
+    function agregarBotonExportarDetallado() {
+        const botonera = document.querySelector('.flex.gap-2.items-end');
+        if (botonera && !document.getElementById('btn-exportar-pdf-detallado')) {
+            const btn = document.createElement('button');
+            btn.id = 'btn-exportar-pdf-detallado';
+            btn.className = 'bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700';
+            btn.innerHTML = '<i class="fas fa-file-pdf"></i> PDF Detallado';
+            btn.onclick = () => {
+                const params = new URLSearchParams();
+                if (document.getElementById('fecha_inicio').value) params.append('fecha_inicio', document.getElementById('fecha_inicio').value);
+                if (document.getElementById('fecha_fin').value) params.append('fecha_fin', document.getElementById('fecha_fin').value);
+                window.location.href = `/admin/reportes/exportar-pdf-detallado?${params.toString()}`;
+            };
+            botonera.appendChild(btn);
+        }
     }
-}
-
-// Iniciar live updates cuando la página cargue
-document.addEventListener('DOMContentLoaded', () => {
-    iniciarLiveUpdates();
-    agregarBotonExportarDetallado();
-});
-
-// Limpiar intervalo al salir de la página
-window.addEventListener('beforeunload', () => {
-    if (intervaloActualizacion) {
-        clearInterval(intervaloActualizacion);
+    
+    // Live Updates
+    function iniciarLiveUpdates() {
+        intervaloActualizacion = setInterval(verificarNovedades, 30000);
     }
-});
-
-// También actualizar cuando se apliquen filtros
-const btnFiltrarOriginal = document.getElementById('btn-filtrar');
-if (btnFiltrarOriginal) {
-    const nuevoBtn = btnFiltrarOriginal.cloneNode(true);
-    btnFiltrarOriginal.parentNode.replaceChild(nuevoBtn, btnFiltrarOriginal);
-    nuevoBtn.addEventListener('click', () => {
-        ultimaActualizacion = null;
+    
+    function verificarNovedades() {
+        const params = new URLSearchParams();
+        params.append('ultima_actualizacion', ultimaActualizacion || '');
+        
+        const fechaInicio = document.getElementById('fecha_inicio').value;
+        const fechaFin = document.getElementById('fecha_fin').value;
+        if (fechaInicio) params.append('fecha_inicio', fechaInicio);
+        if (fechaFin) params.append('fecha_fin', fechaFin);
+        
+        fetch(`/admin/reportes/realtime?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.hay_novedades) {
+                    mostrarNotificacion('📊 ¡Hay nuevos datos! Actualizando reporte...');
+                    cargarReporte();
+                    ultimaActualizacion = data.timestamp;
+                }
+            })
+            .catch(error => console.error('Error en live updates:', error));
+    }
+    
+    function mostrarNotificacion(mensaje) {
+        const notificacion = document.createElement('div');
+        notificacion.className = 'fixed top-20 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50';
+        notificacion.innerHTML = `<i class="fas fa-sync-alt mr-2"></i>${mensaje}`;
+        document.body.appendChild(notificacion);
+        setTimeout(() => notificacion.remove(), 3000);
+    }
+    
+    // Inicializar todo
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarFiltros();
         cargarReporte();
+        iniciarLiveUpdates();
+        agregarBotonExportarDetallado();
     });
-}
+    
+    window.addEventListener('beforeunload', () => {
+        if (intervaloActualizacion) clearInterval(intervaloActualizacion);
+    });
 </script>
+
 </body>
 </html>

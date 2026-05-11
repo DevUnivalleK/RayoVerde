@@ -40,7 +40,11 @@ class Cotizacion extends Model
     }
 
     public function detalles()
-    {
-        return $this->hasMany(DetalleCotizacion::class, 'id_cotizacion');
-    }
+{
+    return $this->hasMany(DetalleCotizacion::class, 'id_cotizacion', 'id_cotizacion');
+}
+public function estado()
+{
+    return $this->belongsTo(EstadoCotizacion::class, 'id_estado', 'id_estado');
+}
 }

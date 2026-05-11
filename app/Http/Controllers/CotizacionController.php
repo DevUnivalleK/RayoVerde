@@ -44,15 +44,10 @@ class CotizacionController extends Controller
         ]);
     }
 
-    // Generar PDF de una cotización
+// Generar PDF de una cotización
 public function generarPDF($id)
 {
-    $clienteId = Auth::user()->id_cliente ?? Auth::id();
-    
-    $cotizacion = Cotizacion::where('id_cliente', $clienteId)
-        ->where('id_cotizacion', $id)
-        ->with(['cliente', 'detalles'])
-        ->firstOrFail();
+    $cotizacion = Cotizacion::findOrFail($id);
     
     $pdf = Pdf::loadView('pdf.cotizacion', compact('cotizacion'));
     return $pdf->download("cotizacion_{$cotizacion->codigo}.pdf");
@@ -61,11 +56,7 @@ public function generarPDF($id)
 // Generar Excel de una cotización
 public function generarExcel($id)
 {
-    $clienteId = Auth::user()->id_cliente ?? Auth::id();
-    
-    $cotizacion = Cotizacion::where('id_cliente', $clienteId)
-        ->where('id_cotizacion', $id)
-        ->firstOrFail();
+    $cotizacion = Cotizacion::findOrFail($id);
     
     return Excel::download(new CotizacionExport($cotizacion), "cotizacion_{$cotizacion->codigo}.xlsx");
 }

@@ -84,7 +84,7 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3">
                             <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i> Mi Perfil</a></li>
                             <li><a class="dropdown-item" href="#"><i class="fas fa-box me-2"></i> Mis Pedidos</a></li>                            <li><a class="dropdown-item" href="#"><i class="fas fa-box me-2"></i> Mis Pedidos</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-box me-2"></i> Mis Cotizacion</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/mis-cotizaciones') }}"><i class="fas fa-file-alt me-2"></i> Mis Cotizaciones</a></li>
 
                             <li><hr class="dropdown-divider"></li>
                             <li>

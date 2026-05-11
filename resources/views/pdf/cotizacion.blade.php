@@ -25,34 +25,47 @@
 
     <div class="info">
         <table>
-            <tr><td><strong>Código:</strong></td><td>{{ $cotizacion->codigo }}</td></tr>
-            <tr><td><strong>Fecha:</strong></td><td>{{ $cotizacion->generado_en }}</td></tr>
-            <tr><td><strong>Cliente:</strong></td><td>{{ $cotizacion->cliente->nombre ?? 'N/A' }}</td></tr>
-            <tr><td><strong>Válido hasta:</strong></td><td>{{ $cotizacion->vencimiento }}</td></tr>
+            <tr>
+                <td><strong>Código:</strong></td>
+                <td>{{ $cotizacion->codigo }}</td>
+                <td><strong>Fecha:</strong></td>
+                <td>{{ $cotizacion->generado_en }}</td>
+            </tr>
+            <tr>
+                <td><strong>Cliente:</strong></td>
+                <td>{{ $cotizacion->cliente->empresa ?? 'N/A' }}</td>
+                <td><strong>Válido hasta:</strong></td>
+                <td>{{ $cotizacion->vencimiento ?? '30 días' }}</td>
+            </tr>
         </table>
     </div>
 
     <table class="productos">
         <thead>
-            <tr><th>Producto</th><th>Cantidad</th><th>Precio Unitario</th><th>Subtotal</th></tr>
+            <tr>
+                <th>Producto</th>
+                <th>Volumen (Litros)</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+            </tr>
         </thead>
         <tbody>
             @foreach($cotizacion->detalles as $detalle)
             <tr>
                 <td>{{ $detalle->producto->nombre ?? 'Producto' }}</td>
-                <td>{{ $detalle->cantidad }}</td>
-                <td>${{ number_format($detalle->precio_unitario, 2) }}</td>
-                <td>${{ number_format($detalle->subtotal, 2) }}</td>
+                <td>{{ $detalle->volumen_litros ?? 0 }}</td>
+                <td>${{ number_format($detalle->precio_unitario ?? 0, 2) }}</td>
+                <td>${{ number_format($detalle->subtotal ?? 0, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
     <div class="total">
-        <p>Subtotal: ${{ number_format($cotizacion->subtotal, 2) }}</p>
-        <p>Descuento: ${{ number_format($cotizacion->descuento_aplicado, 2) }}</p>
-        <p>Envío: ${{ number_format($cotizacion->costo_envio_snapshot, 2) }}</p>
-        <p><strong>TOTAL: ${{ number_format($cotizacion->total, 2) }}</strong></p>
+        <p>Subtotal: ${{ number_format($cotizacion->subtotal ?? 0, 2) }}</p>
+        <p>Descuento: ${{ number_format($cotizacion->descuento_aplicado ?? 0, 2) }}</p>
+        <p>Envío: ${{ number_format($cotizacion->costo_envio_snapshot ?? 0, 2) }}</p>
+        <p><strong>TOTAL: ${{ number_format($cotizacion->total ?? 0, 2) }}</strong></p>
     </div>
 
     <div class="footer">
