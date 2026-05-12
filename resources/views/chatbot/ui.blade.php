@@ -66,7 +66,7 @@
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}' // CRÍTICO: Token de seguridad para Laravel
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}' //  Token de seguridad para Laravel
                     },
                     body: JSON.stringify({ 
                         message: (text === 'init_bot' ? 'hola' : text), 
@@ -89,7 +89,7 @@
                 if (data.redirect) {
                     setTimeout(() => {
                         window.location.href = data.redirect;
-                    }, 2500);
+                    }, 5500);
                 }
 
             } catch (e) {

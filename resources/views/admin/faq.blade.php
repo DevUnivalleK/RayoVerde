@@ -1,178 +1,220 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rayo Verde | Gestión de FAQ</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/variables.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/main.css') }}">
-</head>
-<body class="bg-light">
+@extends('layout')
+@section('title', 'Gestión de FAQ — Rayo Verde')
 
-    <div class="d-flex">
-        <div class="text-white p-3 shadow" style="width: 280px; min-height: 100vh; background-color: var(--verde-primario); position: sticky; top: 0;">
-            <div class="text-center mb-4 pt-3">
-                <h4 class="fw-bold">RAYO VERDE</h4>
-                <small class="opacity-75">Admin System</small>
-            </div>
-            <hr class="opacity-25">
-            <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item mb-2">
-                    <a href="{{ route('admin.faq.index') }}" class="nav-link text-white sidebar-link active" style="background-color: var(--verde-acento);">
-                        <i class="fas fa-question-circle me-2 text-center" style="width: 20px;"></i> FAQ
-                    </a>
-                </li>
-            </ul>
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+@endpush
+
+@section('content')
+
+{{-- ── HERO ─────────────────────────────────────────── --}}
+<div class="rv-hero">
+    <div class="rv-hero-top">
+        <div class="rv-logo"><img src="/images/logo.png" alt="Rayo Verde"></div>
+        <div>
+            <div class="rv-brand-name">Rayo Verde</div>
+            <div class="rv-brand-sub">Panel Administrativo</div>
         </div>
+    </div>
+    <div class="rv-hero-body">
+        <div class="rv-hero-eyebrow">Soporte</div>
+        <h1>Preguntas <em>Frecuentes</em></h1>
+        <p>Gestiona las respuestas automáticas del chatbot</p>
+    </div>
+</div>
 
-        <div class="flex-grow-1 p-4">
-            <header class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                <div>
-                    <h2 class="fw-bold mb-0" style="color: var(--verde-primario);">Preguntas Frecuentes</h2>
-                    <p class="text-muted mb-0">Gestiona las respuestas automáticas del chatbot.</p>
+{{-- ── FLASH ────────────────────────────────────────── --}}
+@if(session('success'))
+    <div class="rv-flash rv-flash-success">✓ {{ session('success') }}</div>
+@endif
+
+{{-- ── TOOLBAR ──────────────────────────────────────── --}}
+<div class="rv-toolbar">
+    <button class="btn btn-dark"
+            onclick="document.getElementById('modalFaq').classList.add('active')">
+        + Nueva Pregunta
+    </button>
+</div>
+
+{{-- ── TABLA ────────────────────────────────────────── --}}
+<div class="rv-card">
+    <div class="rv-card-head">
+        <div class="rv-card-title">
+            <div class="rv-card-icon"><img src="/images/icono-faq.png" alt=""></div>
+            FAQ registradas
+        </div>
+        <span class="rv-badge">{{ $faqs->count() }} preguntas</span>
+    </div>
+
+    @if($faqs->isEmpty())
+        <div class="rv-empty">No hay preguntas registradas aún.</div>
+    @else
+        <table>
+            <thead>
+                <tr>
+                    <th>Categoría</th>
+                    <th>Pregunta</th>
+                    <th>Respuesta</th>
+                    <th style="text-align:center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($faqs as $faq)
+                <tr>
+                    <td><span class="tipo-tag">{{ $faq->categoria }}</span></td>
+                    <td style="font-weight:600;">{{ $faq->pregunta }}</td>
+                    <td class="muted" style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $faq->respuesta }}</td>
+                    <td>
+                        <div class="td-actions" style="justify-content:center;">
+
+                            {{-- Editar --}}
+                            <button type="button" class="btn-icon btn-icon-edit"
+                                    onclick="prepararEdicion({{ json_encode($faq) }})">
+                                <img src="/images/icono-editar.png" alt="Editar">
+                            </button>
+
+                            {{-- Eliminar --}}
+                            <form action="{{ route('admin.faq.destroy', $faq->id_faq) }}"
+                                  method="POST" class="d-inline"
+                                  onsubmit="return confirm('¿Estás seguro de eliminar esta pregunta?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-icon btn-icon-delete">
+                                    <img src="/images/icono-basurero.png" alt="Eliminar">
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+</div>
+
+
+{{-- ── MODAL: Agregar FAQ ───────────────────────────── --}}
+<div class="rv-modal-overlay" id="modalFaq">
+    <div class="rv-modal">
+        <form action="{{ route('admin.faq.store') }}" method="POST">
+            @csrf
+            <div class="rv-modal-header">
+                <div class="rv-modal-ico rv-modal-ico-ok">
+                    <img src="/images/icono-agregar.png" alt="">
                 </div>
-                <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFaq">
-                    <i class="fas fa-plus me-2"></i> Nueva Pregunta
+                <div class="rv-modal-title">Agregar FAQ</div>
+            </div>
+
+            <div class="rv-modal-body">
+                <div class="rv-field">
+                    <label class="rv-label" for="categoria">Categoría</label>
+                    <select name="categoria" id="categoria" class="rv-select rv-select--custom" required>
+                        <option value="General">General</option>
+                        <option value="Pedidos">Pedidos</option>
+                        <option value="Pagos">Pagos</option>
+                        <option value="Envíos">Envíos</option>
+                    </select>
+                </div>
+                <div class="rv-field">
+                    <label class="rv-label" for="pregunta">Pregunta</label>
+                    <input type="text" name="pregunta" id="pregunta"
+                           class="rv-input" placeholder="¿Cómo comprar?" required>
+                </div>
+                <div class="rv-field">
+                    <label class="rv-label" for="respuesta">Respuesta</label>
+                    <textarea name="respuesta" id="respuesta"
+                              class="rv-textarea" rows="4"
+                              placeholder="Describe la solución..." required></textarea>
+                </div>
+            </div>
+
+            <div class="rv-modal-divider"></div>
+            <div class="rv-modal-actions">
+                <button type="button" class="btn-modal-cancel"
+                        onclick="document.getElementById('modalFaq').classList.remove('active')">
+                    Cancelar
                 </button>
-            </header>
+                <button type="submit" class="btn-modal-ok ok">Guardar Pregunta</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
-                    <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+{{-- ── MODAL: Editar FAQ ────────────────────────────── --}}
+<div class="rv-modal-overlay" id="modalEditFaq">
+    <div class="rv-modal">
+        <form id="formEditFaq" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="rv-modal-header">
+                <div class="rv-modal-ico rv-modal-ico-ok">
+                    <img src="/images/icono-editar.png" alt="">
                 </div>
-            @endif
+                <div class="rv-modal-title">Editar FAQ</div>
+            </div>
 
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="bg-light">
-                                <tr class="text-muted small">
-                                    <th>CATEGORÍA</th>
-                                    <th>PREGUNTA</th>
-                                    <th>RESPUESTA</th>
-                                    <th class="text-center">ACCIONES</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($faqs as $faq)
-                                <tr>
-                                    <td><span class="badge bg-success-subtle text-success">{{ $faq->categoria }}</span></td>
-                                    <td class="fw-bold">{{ $faq->pregunta }}</td>
-                                    <td class="text-truncate" style="max-width: 300px;">{{ $faq->respuesta }}</td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                data-bs-toggle="modal" data-bs-target="#modalEditFaq"
-                                                onclick="prepararEdicion({{ json_encode($faq) }})">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-
-                                        <form action="{{ route('admin.faq.destroy', $faq->id_faq) }}" method="POST" class="d-inline" 
-                                              onsubmit="return confirm('¿Estás seguro de eliminar esta pregunta?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="rv-modal-body">
+                <div class="rv-field">
+                    <label class="rv-label" for="edit_categoria">Categoría</label>
+                    <select name="categoria" id="edit_categoria" class="rv-select rv-select--custom" required>
+                        <option value="General">General</option>
+                        <option value="Pedidos">Pedidos</option>
+                        <option value="Pagos">Pagos</option>
+                        <option value="Envíos">Envíos</option>
+                    </select>
+                </div>
+                <div class="rv-field">
+                    <label class="rv-label" for="edit_pregunta">Pregunta</label>
+                    <input type="text" name="pregunta" id="edit_pregunta"
+                           class="rv-input" required>
+                </div>
+                <div class="rv-field">
+                    <label class="rv-label" for="edit_respuesta">Respuesta</label>
+                    <textarea name="respuesta" id="edit_respuesta"
+                              class="rv-textarea" rows="4" required></textarea>
                 </div>
             </div>
-        </div>
+
+            <div class="rv-modal-divider"></div>
+            <div class="rv-modal-actions">
+                <button type="button" class="btn-modal-cancel"
+                        onclick="document.getElementById('modalEditFaq').classList.remove('active')">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-modal-ok ok">Actualizar Cambios</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <div class="modal fade" id="modalFaq" tabindex="-1">
-        <div class="modal-dialog">
-            <form action="{{ route('admin.faq.store') }}" method="POST" class="modal-content">
-                @csrf
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold">Agregar FAQ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Categoría</label>
-                        <select name="categoria" class="form-select" required>
-                            <option value="General">General</option>
-                            <option value="Pedidos">Pedidos</option>
-                            <option value="Pagos">Pagos</option>
-                            <option value="Envíos">Envíos</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Pregunta</label>
-                        <input type="text" name="pregunta" class="form-control" placeholder="¿Cómo comprar?" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Respuesta</label>
-                        <textarea name="respuesta" class="form-control" rows="4" placeholder="Describe la solución..." required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Guardar Pregunta</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <div class="modal fade" id="modalEditFaq" tabindex="-1">
-        <div class="modal-dialog">
-            <form id="formEditFaq" method="POST" class="modal-content">
-                @csrf
-                @method('PUT')
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold">Editar FAQ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Categoría</label>
-                        <select name="categoria" id="edit_categoria" class="form-select" required>
-                            <option value="General">General</option>
-                            <option value="Pedidos">Pedidos</option>
-                            <option value="Pagos">Pagos</option>
-                            <option value="Envíos">Envíos</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Pregunta</label>
-                        <input type="text" name="pregunta" id="edit_pregunta" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Respuesta</label>
-                        <textarea name="respuesta" id="edit_respuesta" class="form-control" rows="4" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Actualizar Cambios</button>
-                </div>
-            </form>
-        </div>
-    </div>
+@push('scripts')
+<script>
+// ── Preparar edición (igual que antes) ────────────────
+function prepararEdicion(faq) {
+    const form = document.getElementById('formEditFaq');
+    form.action = `/admin/faq/${faq.id_faq}`;
+    document.getElementById('edit_categoria').value = faq.categoria;
+    document.getElementById('edit_pregunta').value  = faq.pregunta;
+    document.getElementById('edit_respuesta').value = faq.respuesta;
+    document.getElementById('modalEditFaq').classList.add('active');
+}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+// ── Cerrar con click fuera o Escape ───────────────────
+['modalFaq', 'modalEditFaq'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('active');
+    });
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        document.getElementById('modalFaq').classList.remove('active');
+        document.getElementById('modalEditFaq').classList.remove('active');
+    }
+});
+</script>
+@endpush
 
-    <script>
-        function prepararEdicion(faq) {
-            // Actualizar la URL del formulario dinámicamente
-            const form = document.getElementById('formEditFaq');
-            form.action = `/admin/faq/${faq.id_faq}`;
-
-            // Llenar los campos del modal
-            document.getElementById('edit_categoria').value = faq.categoria;
-            document.getElementById('edit_pregunta').value = faq.pregunta;
-            document.getElementById('edit_respuesta').value = faq.respuesta;
-        }
-    </script>
-</body>
-</html>
+@endsection

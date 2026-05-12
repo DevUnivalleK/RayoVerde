@@ -22,14 +22,17 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\BandejaController;
 
 // --- Rutas de Inicio ---
+
+
 Route::get('/', function () {
+    return view('auth.login');
+})->name('login');
+
+
+Route::get('/home', function () {
     return view('index'); 
 })->name('home');
 
-// --- Autenticación ---
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
 
 Route::get('/password', function () {
     return view('auth.password');
@@ -132,7 +135,6 @@ Route::prefix('admin/reportes')->name('admin.reportes.')->group(function () {
     // Live updates
     Route::get('/realtime', [ReporteController::class, 'datosRealtime'])->name('realtime');
 });
-
 
 
 
