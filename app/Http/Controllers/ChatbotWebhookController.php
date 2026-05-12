@@ -43,7 +43,7 @@ class ChatbotWebhookController extends Controller
         // 1. Inicialización
         if (!$idConversacion || $idConversacion == "null") {
             $idConversacion = DB::table('conversaciones_chatbot')->insertGetId([
-                'id_usuario'  => session('usuario_id'),
+                'id_usuario'  => auth()->id(),
                 'paso_actual' => 'INICIO',
                 'estado'      => 'ACTIVA',
                 'iniciada_en' => now()
@@ -65,7 +65,7 @@ class ChatbotWebhookController extends Controller
                 
                 // Generamos nueva conversación para el nuevo inicio
                 $idConversacion = DB::table('conversaciones_chatbot')->insertGetId([
-                    'id_usuario'  => session('usuario_id'),
+                    'id_usuario'  => auth()->id(),
                     'paso_actual' => 'INICIO',
                     'estado'      => 'ACTIVA',
                     'iniciada_en' => now()
@@ -243,7 +243,7 @@ class ChatbotWebhookController extends Controller
 
     private function finalizarCotizacion($id) {
         $carrito = session('carrito_chatbot', []);
-        $idUsuarioLogueado = session('usuario_id');
+        $idUsuarioLogueado = auth()->id();
         
         if (empty($carrito)) return response()->json(['reply' => 'El carrito esta vacio.', 'redirect' => route('home')]);
         if (!$idUsuarioLogueado) return response()->json(['reply' => 'Inicia sesion para finalizar.', 'redirect' => route('login')]);
