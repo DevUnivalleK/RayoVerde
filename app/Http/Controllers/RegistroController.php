@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use App\Models\Cliente; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\DB; 
 
 class RegistroController extends Controller
 {
@@ -16,17 +18,31 @@ class RegistroController extends Controller
             'apellido' => 'required|string|max:255',
             'correo' => 'required|string|email|max:255|unique:usuarios,correo',
             'password' => 'required|string|min:8|confirmed',
-            'respuesta_secreta' => 'required|string|max:255'
+            'respuesta_secreta' => 'required|string|max:255',
+            'empresa' => 'string|max:255',
+            'telefono' => 'string|max:255',
+            'direccion' => 'string|max:255'
         ]);
 
-        $usuario = Usuario::create([
-            'nombre'            => $request->nombre,
-            'apellido'          => $request->apellido,
-            'correo'            => $request->correo,
-            'password_hash'     => Hash::make($request->password), 
-            'activo'            => true,
-            'respuesta_secreta' => $request->respuesta_secreta    
-        ]);
+        $usuario = DB::transaction(function () use ($request) {
+            
+            $user = Usuario::create([
+                'nombre'            => $request->nombre,
+                'apellido'          => $request->apellido,
+                'correo'            => $request->correo,
+                'password_hash'     => Hash::make($request->password), 
+                'activo'            => true,
+                'respuesta_secreta' => $request->respuesta_secreta    
+            ]);
+
+            $user->cliente()->create([
+                'empresa'   => $request->empresa,
+                'telefono'  => $request->telefono,
+                'direccion' => $request->direccion
+            ]);
+
+            return $user;
+        });
 
         Auth::login($usuario);
 

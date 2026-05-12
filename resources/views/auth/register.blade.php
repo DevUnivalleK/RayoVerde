@@ -140,6 +140,21 @@
         </div>
 
         <div class="form-group">
+            <label class="form-label">Empresa (Opcional)</label>
+            <input type="text" name="empresa" class="form-control" required placeholder="">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Teléfono (Opcional)</label>
+            <input type="text" name="telefono" class="form-control" required placeholder="">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Dirección (Opcional)</label>
+            <input type="text" name="direccion" class="form-control" required placeholder="">
+        </div>
+
+        <div class="form-group">
             <label class="form-label">Contraseña</label>
             <input type="password" name="password" class="form-control" required placeholder="Mínimo 8 caracteres">
         </div>

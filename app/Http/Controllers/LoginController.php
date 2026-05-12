@@ -28,7 +28,7 @@ class LoginController extends Controller
             $request->session()->regenerate();
             RateLimiter::clear($key);
 
-            return redirect()->intended('home')->with('success', 'Bienvenido de nuevo.');
+            return redirect()->intended(route('home'))->with('success', 'Bienvenido de nuevo.');
         }
 
         RateLimiter::hit($key, 60);

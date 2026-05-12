@@ -18,6 +18,7 @@ class Usuario extends Authenticatable
         'correo',
         'rol',
         'activo',
+        'password_hash',
         'respuesta_secreta'
     ];
 
