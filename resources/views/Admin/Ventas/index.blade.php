@@ -1,5 +1,7 @@
-@extends('layout')
-@section('title', 'Ventas y Pagos — Rayo Verde')
+@extends('layouts.admin-sidebar')
+
+@section('title', 'Ventas y Pagos')
+@section('breadcrumb', 'Productos')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/estilosDash.css') }}">

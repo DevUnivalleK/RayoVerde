@@ -686,6 +686,24 @@ tbody td.muted { color: var(--ink-muted); font-size: 12px; font-weight: 300; }
 .btn-modal-ok.err { background: #c0392b; color: #fff; }
 .btn-modal-ok.err:hover { background: #a93226; }
 
+/* ─── Botones de descarga (PDF / Excel) ─────────────────────── */
+.btn-pdf {
+    background: #c0392b; color: #fff;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: var(--radius-sm);
+    font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600;
+    border: none; cursor: pointer; text-decoration: none; transition: background .17s;
+}
+.btn-pdf:hover { background: #a93226; color: #fff; }
+ 
+.btn-excel {
+    background: var(--green-600); color: #fff;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: var(--radius-sm);
+    font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600;
+    border: none; cursor: pointer; text-decoration: none; transition: background .17s;
+}
+.btn-excel:hover { background: var(--green-700); color: #fff; }
 
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 640px) {

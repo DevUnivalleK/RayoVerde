@@ -1,6 +1,7 @@
-@extends('layout')
-@section('title', 'Bandeja de Pedidos — Rayo Verde')
+@extends('layouts.admin-sidebar')
 
+@section('title', 'Bandeja de Pedido')
+@section('breadcrumb', 'Productos')
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/estilosDash.css') }}">
 @endpush
