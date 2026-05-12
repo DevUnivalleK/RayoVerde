@@ -6,18 +6,18 @@
 
     body {
         background: linear-gradient(135deg, #f0f7f2 0%, #d9e8df 100%);
-        min-height: 100vh; /* Cambiado a min-height por si el contenido crece */
+        min-height: 100vh;
         display: flex;
         justify-content: center;
         align-items: center;
         margin: 0;
-        padding: 20px; /* Espacio para móviles */
+        padding: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     .login-card {
         width: 100%;
-        max-width: 500px; /* Un poco más ancho para el registro */
+        max-width: 500px;
         padding: 40px;
         border: none;
         border-radius: 30px;
@@ -140,22 +140,39 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label">Contraseña</label>
-            <input type="password" name="password" class="form-control" required placeholder="Mínimo 8 caracteres">
+            <label class="form-label">Empresa (Opcional)</label>
+            <input type="text" name="empresa" class="form-control" placeholder="Nombre de tu empresa">
         </div>
 
-        <div class="form-group">
-            <label class="form-label">Confirmar Contraseña</label>
-            <input type="password" name="password_confirmation" class="form-control" required placeholder="Repite tu contraseña">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Teléfono</label>
+                <input type="text" name="telefono" class="form-control" placeholder="Nro de contacto">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Dirección</label>
+                <input type="text" name="direccion" class="form-control" placeholder="Ubicación">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Contraseña</label>
+                <input type="password" name="password" class="form-control" required placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirmar Contraseña</label>
+                <input type="password" name="password_confirmation" class="form-control" required placeholder="••••••••">
+            </div>
         </div>
 
         <div class="form-group">
             <label class="form-label">Respuesta Secreta</label>
-            <input type="text" name="respuesta_secreta" class="form-control" required placeholder="Escribe tu respuesta secreta">
+            <input type="text" name="respuesta_secreta" class="form-control" required placeholder="Ej: Nombre de tu mascota">
         </div>
 
         <p class="footer">
-            (Necesitarás la respuesta secreta en caso de que olvides tu contraseña, puede ser el nombre de tu mascota, tu equipo deportivo favorito o algo que sea fácil de recordar)
+            (Necesitarás la respuesta secreta en caso de que olvides tu contraseña)
         </p>
 
         <button type="submit" class="btn-login">REGISTRARSE</button>
