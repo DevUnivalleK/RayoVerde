@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Usuario extends Model
+class Usuario extends Authenticatable
 {
     protected $table = 'usuarios';
     protected $primaryKey = 'id_usuario';
@@ -14,11 +16,15 @@ class Usuario extends Model
         'nombre',
         'apellido',
         'correo',
-        'password_hash',
         'rol',
         'activo',
         'respuesta_secreta'
     ];
+
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
+    }
 
     public function cliente()
     {

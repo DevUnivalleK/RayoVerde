@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth; 
 
 class RegistroController extends Controller
 {
@@ -18,17 +19,17 @@ class RegistroController extends Controller
             'respuesta_secreta' => 'required|string|max:255'
         ]);
 
-        Usuario::create([
-            'nombre'        => $request->nombre,
-            'apellido'      => $request->apellido,
-            'correo'        => $request->correo,
-            'password_hash' => Hash::make($request->password), 
-           // 'password_hash' => Hash::make($request->password), 
-           // 'rol'           => 'cliente', 
-            'activo'        => true,
+        $usuario = Usuario::create([
+            'nombre'            => $request->nombre,
+            'apellido'          => $request->apellido,
+            'correo'            => $request->correo,
+            'password_hash'     => Hash::make($request->password), 
+            'activo'            => true,
             'respuesta_secreta' => $request->respuesta_secreta    
         ]);
 
-        return redirect()->route('login')->with('success', 'Cuenta creada con éxito.');
+        Auth::login($usuario);
+
+        return redirect()->route('dashboard')->with('success', 'Bienvenido, cuenta creada.');
     }
 }

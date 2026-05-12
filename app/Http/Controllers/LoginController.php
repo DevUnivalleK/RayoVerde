@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Usuario;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth; 
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
     public function login(Request $request)
     {
-        $request->validate([
+        $credentials = $request->validate([
             'correo' => 'required|email',
             'password' => 'required',
         ]);
@@ -21,34 +20,31 @@ class LoginController extends Controller
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
-            return back()->with('error', "Demasiados intentos. Intenta de nuevo en $seconds segundos.");
+            return back()->with('error', "Demasiados intentos. Intenta en $seconds segundos.");
         }
 
-        $usuario = Usuario::where('correo', $request->correo)->first();
-
-        if ($usuario && Hash::check($request->password, $usuario->password_hash)) {
-            //if ($usuario && Hash::check($request->password, $usuario->password_hash)) {
+        if (Auth::attempt(['correo' => $request->correo, 'password' => $request->password], $request->filled('remember'))) {
             
+            $request->session()->regenerate();
             RateLimiter::clear($key);
 
-            Session::put('usuario_id', $usuario->id_usuario);
-            Session::put('usuario_nombre', $usuario->nombre);
-            Session::put('usuario_rol', $usuario->rol);
-
-            return redirect()->route('home')->with('success', 'Bienvenido al sistema');
-
+            return redirect()->intended('home')->with('success', 'Bienvenido de nuevo.');
         }
 
         RateLimiter::hit($key, 60);
 
         return back()->withErrors([
-            'login_error' => 'El correo o la contraseña son incorrectos.',
-        ])->withInput();
+            'correo' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
+        ])->onlyInput('correo');
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        Session::flush();
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
 }
