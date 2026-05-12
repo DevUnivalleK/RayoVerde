@@ -4,146 +4,285 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class ChatbotWebhookController extends Controller
 {
+    /**
+     * Registra el historial de mensajes en la tabla mensajes_chatbot
+     */
+    private function registrarLog($idConv, $emisor, $texto) {
+        DB::table('mensajes_chatbot')->insert([
+            'id_conversacion' => $idConv,
+            'emisor'          => $emisor,
+            'contenido'       => $texto,
+            'enviado_en'      => now()
+        ]);
+    }
+
+    /**
+     * Actualiza el estado final de la conversación en conversaciones_chatbot
+     */
+    private function finalizarConversacion($id, $estado) {
+        if (!$id) return;
+        
+        DB::table('conversaciones_chatbot')
+            ->where('id_conversacion', $id)
+            ->update([
+                'estado'            => $estado,
+                'finalizada_en'     => now(),
+                'derivada_a_agente' => ($estado == 'DERIVADA')
+            ]);
+    }
+
     public function handle(Request $request)
     {
-        $start = microtime(true);
-        $userMessage = trim($request->json('message'));
+        $rawMessage = trim($request->json('message'));
+        $userMessage = str_replace(',', '.', $rawMessage);
         $idConversacion = $request->json('id_conversacion');
 
-        try {
-            // 1. Gestión de Sesión (Crear si no existe)
-            if (!$idConversacion) {
+        // 1. Inicialización
+        if (!$idConversacion || $idConversacion == "null") {
+            $idConversacion = DB::table('conversaciones_chatbot')->insertGetId([
+                'id_usuario'  => session('usuario_id'),
+                'paso_actual' => 'INICIO',
+                'estado'      => 'ACTIVA',
+                'iniciada_en' => now()
+            ], 'id_conversacion');
+            session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
+        }
+
+        // [LOG] Guardar mensaje del usuario
+        $this->registrarLog($idConversacion, 'usuario', $userMessage);
+
+        $conversacion = DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->first();
+        $estadoActual = $conversacion->paso_actual;
+
+        // 2. Comandos de Reinicio y Abandono
+        if (in_array(strtolower($userMessage), ['hola', 'menu', 'inicio', 'volver'])) {
+            // Si abandona un flujo activo para ir al inicio, sellamos la actual como ABANDONADA
+            if ($estadoActual != 'INICIO' && $conversacion->estado == 'ACTIVA') {
+                $this->finalizarConversacion($idConversacion, 'ABANDONADA');
+                
+                // Generamos nueva conversación para el nuevo inicio
                 $idConversacion = DB::table('conversaciones_chatbot')->insertGetId([
+                    'id_usuario'  => session('usuario_id'),
                     'paso_actual' => 'INICIO',
                     'estado'      => 'ACTIVA',
                     'iniciada_en' => now()
                 ], 'id_conversacion');
             }
+            session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
+            $estadoActual = 'INICIO';
+        }
 
-            // 2. FORZAR REINICIO (Útil para tus pruebas)
-            // Si el usuario saluda, lo mandamos al INICIO siempre.
-            $keywordsReinicio = ['hola', 'menu', 'inicio', 'buenos dias'];
-            if (in_array(strtolower($userMessage), $keywordsReinicio)) {
-                DB::table('conversaciones_chatbot')
-                    ->where('id_conversacion', $idConversacion)
-                    ->update(['paso_actual' => 'INICIO']);
-                $estadoActual = 'INICIO';
-            } else {
-                $conversacion = DB::table('conversaciones_chatbot')
-                    ->where('id_conversacion', $idConversacion)
-                    ->first();
-                $estadoActual = $conversacion ? $conversacion->paso_actual : 'INICIO';
-            }
+        $nuevoEstado = $estadoActual;
+        $reply = null;
 
-            // --- LÓGICA DE FAQ ---
-            if ($estadoActual == 'ESPERANDO_FAQ') {
-                if (strtolower($userMessage) == 'volver') {
-                    $estadoActual = 'INICIO'; // Cambiamos localmente para que el código de abajo responda el inicio
+        // 3. Máquina de Estados
+        switch ($estadoActual) {
+            case 'INICIO':
+            case 'ESPERANDO_MENU':
+                if ($userMessage == '1') {
+                    $nuevoEstado = 'SOLICITAR_PRODUCTO';
+                } elseif ($userMessage == '2') {
+                    $nuevoEstado = 'ESPERANDO_FAQ';
+                } elseif ($userMessage == '3') {
+                    $this->finalizarConversacion($idConversacion, 'DERIVADA');
+                    $reply = '⏳ Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.';
+                    $this->registrarLog($idConversacion, 'bot', $reply);
+                    return response()->json(['reply' => $reply, 'redirect' => route('home')]);
+                }
+                break;
+
+            case 'ESPERANDO_FAQ':
+                $preguntas = DB::table('chatbot_faqs')->orderBy('id_faq', 'asc')->get();
+                $idx = (int)$userMessage - 1;
+
+                if (isset($preguntas[$idx])) {
+                    $faq = $preguntas[$idx];
+                    DB::table('chatbot_faqs')->where('id_faq', $faq->id_faq)->increment('contador_uso');
+                    $reply = "" . $faq->respuesta . "\n\n1. Ver otras dudas\n2. Hablar con un Asesor\n3. Volver al menu principal";
+                    $nuevoEstado = 'FAQ_CONTESTADA';
+                } elseif ($userMessage == (count($preguntas) + 1)) {
+                    $this->finalizarConversacion($idConversacion, 'DERIVADA');
+                    $reply = 'Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.';
+                    $this->registrarLog($idConversacion, 'bot', $reply);
+                    return response()->json(['reply' => $reply, 'redirect' => route('home')]);
                 } else {
-                    $faq = DB::table('chatbot_faqs')
-                        ->where('pregunta', 'ILIKE', "%{$userMessage}%")
-                        ->first();
+                    $nuevoEstado = 'ESPERANDO_FAQ';
+                }
+                break;
 
-                    if ($faq) {
-                        $reply = "🔍 *Resultado:* \n" . $faq->respuesta . "\n\n_¿Tienes otra duda o escribe 'Volver'_";
-                        DB::table('chatbot_faqs')->where('id_faq', $faq->id_faq)->increment('contador_uso');
-                    } else {
-                        $reply = "Lo siento, no encontré información sobre eso. 😕\nIntenta con otras palabras o escribe 'Volver'.";
-                    }
+            case 'FAQ_CONTESTADA':
+                if ($userMessage == '1') {
+                    $nuevoEstado = 'ESPERANDO_FAQ';
+                } elseif ($userMessage == '2') {
+                    $this->finalizarConversacion($idConversacion, 'DERIVADA');
+                    $reply = 'Redirigiendo con un asesor...';
+                    $this->registrarLog($idConversacion, 'bot', $reply);
+                    return response()->json(['reply' => $reply, 'redirect' => route('home')]);
+                } else {
+                    $nuevoEstado = 'INICIO';
+                }
+                break;
 
-                    return response()->json([
-                        'reply' => $reply,
-                        'id_conversacion' => $idConversacion,
-                        'timing' => round(microtime(true) - $start, 3)
+            case 'SOLICITAR_PRODUCTO':
+                $productos = DB::table('productos')->get();
+                $idx = (int)$userMessage - 1;
+                if (isset($productos[$idx])) {
+                    session(['temp_prod' => [
+                        'id' => $productos[$idx]->id_producto,
+                        'nombre' => $productos[$idx]->nombre,
+                        'precio' => $productos[$idx]->precio
+                    ]]);
+                    $nuevoEstado = 'SOLICITAR_UNIDAD';
+                }
+                break;
+
+            case 'SOLICITAR_UNIDAD':
+                session(['temp_unidad' => ($userMessage == '1' ? 'ml' : 'L')]);
+                $nuevoEstado = 'SOLICITAR_CANTIDAD';
+                break;
+
+            case 'SOLICITAR_CANTIDAD':
+                $prod = session('temp_prod');
+                $uniUser = session('temp_unidad');
+                $cantUser = (float)$userMessage;
+                if ($uniUser == 'ml') $cantUser = round($cantUser);
+
+                preg_match('/(\d+(?:\.\d+)?)\s*(ml|L|l)/i', $prod['nombre'], $matches);
+                $valBase = isset($matches[1]) ? (float)$matches[1] : 1;
+                $uniBase = isset($matches[2]) ? strtolower($matches[2]) : 'ml';
+                $baseEnLitros = ($uniBase == 'ml') ? $valBase / 1000 : $valBase;
+                $userEnLitros = ($uniUser == 'ml') ? $cantUser / 1000 : $cantUser;
+
+                if ($userEnLitros < ($baseEnLitros - 0.0001)) {
+                    $nuevoEstado = 'ERROR_CANTIDAD_MINIMA';
+                    $msgMinimo = ($uniBase == 'ml') ? "{$valBase}ml" : "{$valBase}L";
+                    $reply = "Cantidad insuficiente. El mínimo para este producto es de *{$msgMinimo}*.\n\n" .
+                             "Tu ingreso: {$cantUser}{$uniUser}\n\n" .
+                             "¿Qué deseas hacer?\n1. Intentar con otra cantidad (Ej: 1.5 o 500)\n2. Cancelar y volver al menú";
+                    
+                    $this->registrarLog($idConversacion, 'bot', $reply);
+                    DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->update(['paso_actual' => $nuevoEstado]);
+                    return response()->json(['reply' => $reply, 'id_conversacion' => $idConversacion]);
+                }
+
+                $subtotal = ($prod['precio'] / $baseEnLitros) * $userEnLitros;
+                $carrito = session('carrito_chatbot', []);
+                $carrito[] = [
+                    'nombre' => $prod['nombre'], 'id_prod' => $prod['id'], 
+                    'cant' => $cantUser, 'uni' => $uniUser, 'sub' => $subtotal
+                ];
+                session(['carrito_chatbot' => $carrito]);
+                $nuevoEstado = 'PREGUNTAR_BUCLE';
+                break;
+
+            case 'ERROR_CANTIDAD_MINIMA':
+                if ($userMessage == '1') {
+                    $nuevoEstado = 'SOLICITAR_CANTIDAD';
+                } else {
+                    session()->forget(['temp_prod', 'temp_unidad']);
+                    $nuevoEstado = 'INICIO';
+                }
+                break;
+
+            case 'PREGUNTAR_BUCLE':
+                $nuevoEstado = ($userMessage == '1') ? 'SOLICITAR_PRODUCTO' : 'MOSTRAR_RESUMEN';
+                break;
+
+            case 'MOSTRAR_RESUMEN':
+                if ($userMessage == '1') return $this->finalizarCotizacion($idConversacion);
+                $this->finalizarConversacion($idConversacion, 'ABANDONADA');
+                session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
+                $nuevoEstado = 'INICIO';
+                break;
+        }
+
+        // 4. Generación de Respuesta Final
+        DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->update(['paso_actual' => $nuevoEstado]);
+        
+        if (!$reply) {
+            if ($nuevoEstado == 'INICIO' || $nuevoEstado == 'ESPERANDO_MENU') {
+                $reply = "¡Hola! Soy el asistente de Rayo Verde. Selecciona una opción:\n1. Nueva Cotización\n2. Preguntas Frecuentes\n3. Hablar con un Asesor";
+            }
+            elseif ($nuevoEstado == 'ESPERANDO_FAQ') {
+                $faqs = DB::table('chatbot_faqs')->orderBy('id_faq', 'asc')->get();
+                $reply = "Preguntas Frecuentes\nSelecciona el numero de tu duda:\n\n";
+                foreach ($faqs as $i => $f) { $reply .= ($i+1) . ". " . $f->pregunta . "\n"; }
+                $reply .= (count($faqs) + 1) . ". No veo mi duda (Hablar con un asesor)\n\nO escribe Volver.";
+            }
+            elseif ($nuevoEstado == 'SOLICITAR_PRODUCTO') {
+                $prods = DB::table('productos')->get();
+                $reply = "Selecciona un producto:\n";
+                foreach ($prods as $i => $p) $reply .= ($i + 1) . ". " . $p->nombre . " (Bs. " . $p->precio . ")\n";
+            } 
+            elseif ($nuevoEstado == 'MOSTRAR_RESUMEN') {
+                $carrito = session('carrito_chatbot', []);
+                $res = "RESUMEN DE COTIZACION\n\n";
+                $total = array_sum(array_column($carrito, 'sub'));
+                foreach ($carrito as $c) {
+                    $res .= "- {$c['nombre']}\n  {$c['cant']} {$c['uni']} -> Bs. " . number_format($c['sub'], 2) . "\n\n";
+                }
+                $reply = $res . "----------\nTOTAL: Bs. " . number_format($total, 2) . "\n\n1. Confirmar Cotizacion y Continuar con la Compra\n2. Cancelar todo";
+            }
+            elseif ($nuevoEstado == 'SOLICITAR_CANTIDAD') {
+                $uni = session('temp_unidad');
+                $reply = "Indica la cantidad en " . $uni . ":\n(Ej: " . ($uni == 'L' ? "1.5" : "250") . ")";
+            } else {
+                $paso = DB::table('chatbot_pasos')->where('estado_actual', $nuevoEstado)->first();
+                $reply = $paso->mensaje_bot ?? "Selecciona una opción:";
+            }
+        }
+
+        // [LOG] Guardar respuesta del bot
+        $this->registrarLog($idConversacion, 'bot', $reply);
+
+        return response()->json(['reply' => $reply, 'id_conversacion' => $idConversacion]);
+    }
+
+    private function finalizarCotizacion($id) {
+        $carrito = session('carrito_chatbot', []);
+        $idUsuarioLogueado = session('usuario_id');
+        
+        if (empty($carrito)) return response()->json(['reply' => 'El carrito esta vacio.', 'redirect' => route('home')]);
+        if (!$idUsuarioLogueado) return response()->json(['reply' => 'Inicia sesion para finalizar.', 'redirect' => route('login')]);
+
+        try {
+            DB::transaction(function () use ($carrito, $idUsuarioLogueado, $id) {
+                $total = array_sum(array_column($carrito, 'sub'));
+                $cotId = DB::table('cotizaciones')->insertGetId([
+                    'codigo' => 'COT-' . strtoupper(uniqid()),
+                    'id_usuario' => $idUsuarioLogueado,
+                    'id_estado' => 1,
+                    'total' => $total,
+                    'generado_en' => now()
+                ], 'id_cotizacion');
+
+                foreach ($carrito as $item) {
+                    DB::table('detalle_cotizaciones')->insert([
+                        'id_cotizacion' => $cotId,
+                        'id_producto'   => $item['id_prod'],
+                        'volumen_litros'=> (float)($item['uni'] == 'ml' ? $item['cant'] / 1000 : $item['cant']),
+                        'precio_unitario' => (float)($item['sub'] / ($item['cant'] == 0 ? 1 : $item['cant'])),
+                        'subtotal'      => (float)$item['sub']
                     ]);
                 }
-            }
 
-            // 3. Obtener configuración del paso actual
-            $pasoConfig = DB::table('chatbot_pasos')->where('estado_actual', $estadoActual)->first();
+                // ÉXITO: Sellar conversación
+                $this->finalizarConversacion($id, 'FINALIZADA');
+            });
 
-            if (!$pasoConfig) {
-                return response()->json(['reply' => 'Estado no configurado: ' . $estadoActual]);
-            }
-
-            // 4. Lógica de Transición (Opciones 1, 2, 3)
-            $nuevoEstado = $pasoConfig->estado_siguiente_default;
-
-            if ($pasoConfig->opciones) {
-                $opcionesMap = json_decode($pasoConfig->opciones, true);
-                if (isset($opcionesMap[$userMessage])) {
-                    $nuevoEstado = $opcionesMap[$userMessage];
-                } else {
-                    // Si el usuario envía algo que no es 1, 2 o 3, lo mantenemos en el mismo sitio
-                    // y le repetimos el mensaje para que no se pierda.
-                    $nuevoEstado = $estadoActual; 
-                }
-            }
-
-            // 5. Actualizar DB
-           // DB::table('conversaciones_chatbot')
-             //   ->where('id_conversacion', $idConversacion)
-               // ->update(['paso_actual' => $nuevoEstado]);
-// 5. Actualizar el progreso en la base de datos
-DB::table('conversaciones_chatbot')
-    ->where('id_conversacion', $idConversacion)
-    ->update(['paso_actual' => $nuevoEstado]);
-
-// --- LÓGICA DE AUTOMATIZACIÓN DE PRUEBA ---
-if ($nuevoEstado == 'FINALIZAR') {
-    try {
-        DB::transaction(function () use ($idConversacion) {
-            // A. Crear la Cotización
-            $idCotizacion = DB::table('cotizaciones')->insertGetId([
-                'codigo' => 'COT-' . strtoupper(uniqid()), // Genera un código único tipo COT-645A1
-                'id_cliente' => 2,          // Valor de prueba solicitado
-                'id_estado' => 1,           // Suponiendo que 1 es 'Pendiente' o 'Nueva'
-                'precio_por_litro' => 50.00, // Valor de prueba
-                'generado_en' => now(),
-                'vencimiento' => now()->addDays(5),
-            ], 'id_cotizacion');
-
-            // B. Crear la Notificación para el Admin
-            DB::table('notificaciones')->insert([
-                'id_cliente' => 2,          // Valor de prueba solicitado
-                'id_cotizacion' => $idCotizacion,
-                'tipo' => 'NUEVA_COTIZACION',
-                'mensaje' => "El Chatbot generó una nueva cotización automática (#$idCotizacion).",
-                'leida' => false,
-                'enviada_en' => now(),
-            ]);
-        });
-        Log::info("Cotización y Notificación creadas con éxito para la sesión: $idConversacion");
-    } catch (\Exception $e) {
-        Log::error("Error al generar cotización de prueba: " . $e->getMessage());
-        // No detenemos el flujo del bot para que el usuario reciba su mensaje de despedida
-    }
-}
-
-
-
-
-
-            // 6. Preparar Respuesta
-            $proximoPaso = DB::table('chatbot_pasos')->where('estado_actual', $nuevoEstado)->first();
-            $mensaje = $proximoPaso ? $proximoPaso->mensaje_bot : "Error de flujo.";
+            session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
+            $this->registrarLog($id, 'bot', "Cotización guardada exitosamente.");
             
-            // Limpiar saltos de línea para el Widget
-            $mensaje = str_replace('\n', "\n", $mensaje);
-
+            return response()->json(['reply' => 'Cotizacion guardada exitosamente.', 'redirect' => route('home')]);
             return response()->json([
-                'reply' => $mensaje,
-                'id_conversacion' => $idConversacion,
-                'timing' => round(microtime(true) - $start, 3)
+                   'reply' => " *Cotización guardada correctamente.*\n\nEspera un momento, por favor... te estamos dirigiendo a la sección de compra para finalizar tu pedido. ", 
+                   'redirect' => route('home')
             ]);
-
         } catch (\Exception $e) {
-            Log::error("Error Chatbot: " . $e->getMessage());
-            return response()->json(['reply' => "⚠️ Error: " . $e->getMessage()], 500);
+            return response()->json(['reply' => 'Error técnico, intente más tarde.', 'id_conversacion' => $id]);
         }
     }
 }
