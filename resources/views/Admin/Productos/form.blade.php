@@ -1,5 +1,7 @@
-@extends('layout')
-@section('title', isset($producto) ? 'Editar Producto — Rayo Verde' : 'Agregar Producto — Rayo Verde')
+@extends('layouts.admin-sidebar')
+
+@section('title', 'Productos')
+@section('breadcrumb', 'Productos')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/estilosDash.css') }}">
