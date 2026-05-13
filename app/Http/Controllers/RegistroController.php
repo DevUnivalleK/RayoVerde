@@ -45,6 +45,7 @@ class RegistroController extends Controller
             });
 
             Auth::login($usuario);
+            
             return redirect()->route('home')->with('success', 'Cuenta creada con éxito.');
 
         } catch (\Exception $e) {
