@@ -33,8 +33,8 @@ class ReporteController extends Controller
         }
         
         // Filtro por cliente
-        if ($request->id_cliente) {
-            $query->where('id_cliente', $request->id_cliente);
+        if ($request->id_usuario) {
+            $query->where('id_usuario', $request->id_usuario);
         }
         
         // Filtro por producto (a través de detalles)
@@ -44,7 +44,7 @@ class ReporteController extends Controller
             });
         }
         
-        $cotizaciones = $query->with(['cliente', 'detalles.producto'])
+        $cotizaciones = $query->with(['usuario', 'detalles.producto'])
             ->orderBy('generado_en', 'desc')
             ->get();
         
@@ -69,7 +69,7 @@ class ReporteController extends Controller
         $productos = Producto::select('id_producto', 'nombre')->get();
         
         // Estados para el filtro
-        $estados = DB::table('estados_cotizacion')->select('id_estado', 'nombre_estado')->get();
+        $estados = DB::table('estados_cotizacion')->select('id_estado', 'nombre')->get();
         
         // Calcular resumen
         $totalVentas = $cotizaciones->sum('subtotal');
@@ -97,7 +97,7 @@ class ReporteController extends Controller
     {
         $clientes = Cliente::select('id_cliente', 'empresa')->get();
         $productos = Producto::select('id_producto', 'nombre')->get();
-        $estados = DB::table('estados_cotizacion')->select('id_estado', 'nombre_estado')->get();
+        $estados = DB::table('estados_cotizacion')->select('id_estado', 'nombre')->get();
         
         return response()->json([
             'success' => true,
@@ -116,7 +116,7 @@ class ReporteController extends Controller
         $fechaFin = $request->fecha_fin ?? now()->toDateString();
         
         $cotizaciones = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
-            ->with(['cliente'])
+            ->with(['usuario'])
             ->get();
         
         return Excel::download(new ReporteExport($cotizaciones, $fechaInicio, $fechaFin), 'reporte_cotizaciones.xlsx');
@@ -129,7 +129,7 @@ class ReporteController extends Controller
         $fechaFin = $request->fecha_fin ?? now()->toDateString();
         
         $cotizaciones = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
-            ->with(['cliente'])
+            ->with(['usuario'])
             ->get();
         
         $pdf = Pdf::loadView('pdf.reporte', compact('cotizaciones', 'fechaInicio', 'fechaFin'));
@@ -151,7 +151,7 @@ class ReporteController extends Controller
             ->first();
         
         $cotizaciones = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
-            ->with(['cliente', 'detalles.producto'])
+            ->with(['usuario', 'detalles.producto'])
             ->get();
         
         $pdf = Pdf::loadView('pdf.reporte_detallado', compact('cotizaciones', 'fechaInicio', 'fechaFin', 'totales'));
@@ -188,4 +188,9 @@ class ReporteController extends Controller
             'totales' => $totales
         ]);
     }
+    public function getUsuarios()
+{
+    $usuarios = DB::table('usuarios')->select('id_usuario', 'nombre', 'apellido')->get();
+    return response()->json($usuarios);
+}
 }

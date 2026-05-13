@@ -12,26 +12,23 @@ class Cotizacion extends Model
 
     protected $fillable = [
         'codigo',
-        'id_cliente',
         'id_usuario',
         'id_tarifa_envio',
+        'id_estado',
         'subtotal',
-        'descuento_aplicado',
-        'costo_envio',
         'total',
-        'estado',
-        'vencimiento',
-        'precio_por_litro'
+        'descuento_aplicado',
+        'costo_envio_snapshot',
+        'precio_por_litro',
+        'generado_en',
+        'vencimiento'
+        
     ];
 
-    public function cliente()
-    {
-        return $this->belongsTo(Cliente::class, 'id_cliente');
-    }
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');
     }
 
     public function tarifa()

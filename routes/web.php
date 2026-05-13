@@ -115,26 +115,7 @@ Route::get('/cotizaciones/historial', [CotizacionController::class, 'historial']
 Route::get('/cotizaciones/{id}', [CotizacionController::class, 'show']);
 Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'generarPDF']);
 Route::get('/cotizaciones/{id}/excel', [CotizacionController::class, 'generarExcel']);
-// Reportes y Reportes avanzados (Organizados en grupo)
-Route::prefix('admin/reportes')->name('admin.reportes.')->group(function () {
-    
-    // Esta es la ruta que soluciona tu error: admin.reportes.index
-    Route::get('/', [ReporteController::class, 'index'])->name('index');
 
-    // APIs y métricas
-    Route::get('/metricas', [ReporteController::class, 'metricas'])->name('metricas');
-    Route::get('/por-fecha', [ReporteController::class, 'porFecha'])->name('porFecha');
-    Route::get('/filtrado', [ReporteController::class, 'reporteFiltrado'])->name('filtrado');
-    Route::get('/filtros', [ReporteController::class, 'reporteFiltrado'])->name('filtros');
-    
-    // Exportaciones
-    Route::get('/exportar-excel', [ReporteController::class, 'exportarExcel'])->name('exportar.excel');
-    Route::get('/exportar-pdf', [ReporteController::class, 'exportarPdf'])->name('exportar.pdf');
-    Route::get('/exportar-pdf-detallado', [ReporteController::class, 'exportarPdfDetallado'])->name('exportar.pdf.detallado');
-
-    // Live updates
-    Route::get('/realtime', [ReporteController::class, 'datosRealtime'])->name('realtime');
-});
 
 
 
@@ -186,3 +167,27 @@ Route::prefix('admin/pedidos')->name('admin.pedidos.')->group(function () {
     Route::post('/cotizacion/{id}/completar',
         [BandejaController::class, 'completar'])->name('completar');
 });
+
+// === RUTAS DE REPORTES (completas) ===
+Route::get('/admin/reportes', function () {
+    return view('Admin.reportes.general');
+})->name('admin.reportes.index');
+
+Route::get('/admin/reportes/general', function () {
+    return view('Admin.reportes.general');
+})->name('admin.reportes.general');
+
+Route::get('/admin/reportes/por-fecha', function () {
+    return view('Admin.reportes.por_fecha');
+})->name('admin.reportes.porFecha');
+
+Route::get('/admin/reportes/filtrado', function () {
+    return view('Admin.reportes.filtrado');
+})->name('admin.reportes.filtros');  // ← Este es el nombre que usa el sidebar
+
+// API endpoints
+Route::get('/admin/reportes/usuarios', [ReporteController::class, 'getUsuarios']);
+Route::get('/admin/reportes/filtrado-data', [ReporteController::class, 'reporteFiltrado']);
+Route::get('/admin/reportes/metricas', [ReporteController::class, 'metricas']);
+Route::get('/admin/reportes/exportar.excel', [ReporteController::class, 'exportarExcel'])->name('admin.reportes.exportar.excel');
+Route::get('/admin/reportes/exportar.pdf', [ReporteController::class, 'exportarPdf'])->name('admin.reportes.exportar.pdf');

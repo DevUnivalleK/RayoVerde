@@ -306,28 +306,28 @@
         </a> -->
 
         {{-- Reportes --}}
-        <button onclick="toggleSubmenu('sub-rep',this)" class="nav-item">
-            <i class="fas fa-chart-bar ni"></i>
-            <span class="flex-1 text-left">Reportes</span>
-            <i class="fas fa-chevron-right s-arrow"></i>
-        </button>
-        <div id="sub-rep" class="submenu pl-5 mt-0.5 space-y-0.5">
-            <a href="{{ route('admin.reportes.index') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-                <i class="fas fa-chart-pie ni" style="font-size:0.68rem;"></i><span>General</span>
-            </a>
-            <a href="{{ route('admin.reportes.porFecha') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-                <i class="fas fa-calendar-alt ni" style="font-size:0.68rem;"></i><span>Por fecha</span>
-            </a>
-            <a href="{{ route('admin.reportes.filtros') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-                <i class="fas fa-filter ni" style="font-size:0.68rem;"></i><span>Filtrado</span>
-            </a>
-            <a href="{{ route('admin.reportes.exportar.excel') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-                <i class="fas fa-file-excel ni" style="font-size:0.68rem; color:#22c55e;"></i><span>Excel</span>
-            </a>
-            <a href="{{ route('admin.reportes.exportar.pdf') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-                <i class="fas fa-file-pdf ni" style="font-size:0.68rem; color:#ef4444;"></i><span>PDF</span>
-            </a>
-        </div>
+<button onclick="toggleSubmenu('sub-rep',this)" class="nav-item">
+    <i class="fas fa-chart-bar ni"></i>
+    <span class="flex-1 text-left">Reportes</span>
+    <i class="fas fa-chevron-right s-arrow"></i>
+</button>
+<div id="sub-rep" class="submenu pl-5 mt-0.5 space-y-0.5">
+    <a href="{{ route('admin.reportes.general') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+        <i class="fas fa-chart-pie ni" style="font-size:0.68rem;"></i><span>General</span>
+    </a>
+    <a href="{{ route('admin.reportes.porFecha') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+        <i class="fas fa-calendar-alt ni" style="font-size:0.68rem;"></i><span>Por fecha</span>
+    </a>
+    <a href="{{ route('admin.reportes.filtros') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+        <i class="fas fa-filter ni" style="font-size:0.68rem;"></i><span>Filtrado</span>
+    </a>
+    <a href="{{ route('admin.reportes.exportar.excel') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+        <i class="fas fa-file-excel ni" style="font-size:0.68rem; color:#22c55e;"></i><span>Excel</span>
+    </a>
+    <a href="{{ route('admin.reportes.exportar.pdf') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+        <i class="fas fa-file-pdf ni" style="font-size:0.68rem; color:#ef4444;"></i><span>PDF</span>
+    </a>
+</div>
 
         <p class="slabel">Configuración</p>
 

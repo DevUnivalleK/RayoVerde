@@ -11,17 +11,15 @@ use Illuminate\Support\Facades\Auth;
 
 class CotizacionController extends Controller
 {
-    public function historial()
+ public function historial()
 {
-    // Temporalmente usamos un ID de cliente fijo para probar
-    $clienteId = 2; // Cambia a un ID que sepas que tiene cotizaciones
+    // Cambiar id_cliente por id_usuario
+    $usuarioId = Auth::user()->id_usuario ?? Auth::id();
     
-    $cotizaciones = Cotizacion::where('id_cliente', $clienteId)
+    $cotizaciones = Cotizacion::where('id_usuario', $usuarioId)
         ->orderBy('generado_en', 'desc')
         ->get();
-    
-    \Log::info('Cotizaciones encontradas:', ['count' => $cotizaciones->count(), 'data' => $cotizaciones->toArray()]);
-    
+
     return response()->json([
         'success' => true,
         'data' => $cotizaciones,
@@ -31,18 +29,18 @@ class CotizacionController extends Controller
     
     // Ver detalle de una cotización específica
     public function show($id)
-    {
-        $clienteId = Auth::user()->id_cliente ?? Auth::id();
-        
-        $cotizacion = Cotizacion::where('id_cliente', $clienteId)
-            ->where('id_cotizacion', $id)
-            ->firstOrFail();
-        
-        return response()->json([
-            'success' => true,
-            'data' => $cotizacion
-        ]);
-    }
+{
+    $usuarioId = Auth::user()->id_usuario ?? Auth::id();
+    
+    $cotizacion = Cotizacion::where('id_usuario', $usuarioId)
+        ->where('id_cotizacion', $id)
+        ->firstOrFail();
+    
+    return response()->json([
+        'success' => true,
+        'data' => $cotizacion
+    ]);
+}
 
 // Generar PDF de una cotización
 public function generarPDF($id)
