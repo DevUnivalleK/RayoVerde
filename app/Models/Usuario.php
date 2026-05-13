@@ -36,4 +36,10 @@ class Usuario extends Authenticatable
     {
         return $this->hasMany(Cotizacion::class, 'id_usuario');
     }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Rol::class, 'usuario_roles', 'id_usuario', 'id_rol');
+    }
+
 }

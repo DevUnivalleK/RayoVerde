@@ -51,6 +51,8 @@ class RegistroController extends Controller
                     'direccion' => $request->direccion
                 ]);
 
+                $user->roles()->attach(1);
+
                 return $user;
             });
 
