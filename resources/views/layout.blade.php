@@ -29,22 +29,6 @@
             min-height: 100vh;
         }
 
-        .topbar {
-            background: var(--verde-oscuro);
-            padding: 10px 24px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        .topbar img { height: 48px; width: auto; }
-        .topbar .brand {
-            color: var(--blanco);
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
         .page-wrapper {
             max-width: 1100px;
             margin: 36px auto;
@@ -63,7 +47,6 @@
             font-weight: 800;
             color: var(--verde-oscuro);
         }
-
         .search-box {
             display: flex;
             align-items: center;
@@ -181,12 +164,6 @@
     @stack('styles')
 </head>
 <body>
-
-<nav class="topbar">
-    {{-- 🖼️ Coloca el logo de la empresa en: public/images/logo.png --}}
-    <img src="/images/logo.png" alt="Rayo Verde">
-    <span class="brand">RAYO VERDE · Admin</span>
-</nav>
 
 <div class="page-wrapper">
     @yield('content')

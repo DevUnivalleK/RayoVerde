@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\ReporteController;
 use App\Exports\ReporteExport;
-
+use App\Http\Controllers\ChatbotWebhookController;
 // Controladores de Autenticación y FAQ
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\RegistroController;
@@ -14,16 +14,31 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProductoCatalogoController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\VentaController;
+use App\Http\Controllers\PasswordRecoverController;
+
+// Controladores de Carrito, Checkout y Bandeja de Pedidos
+use App\Http\Controllers\CarritoController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Admin\BandejaController;
 
 // --- Rutas de Inicio ---
+
+
 Route::get('/', function () {
+    return view('auth.login');
+})->name('login');
+
+
+Route::get('/home', function () {
     return view('index'); 
 })->name('home');
 
-// --- Autenticación ---
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+
+Route::get('/password', function () {
+    return view('auth.password');
+})->name('password');
+
+Route::post('/password', [PasswordRecoverController::class, 'passwordRecover'])->name('password.recover');
 
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -47,13 +62,11 @@ Route::get('/admin', function () {
 })->name('admin.dashboard');
 
 // --- Chatbot (Rutas Duales) ---
-Route::get('/chatbot-ui', function () {
-    return view('chatbot.index'); 
-})->name('chatbot.ui');
-
 Route::get('/chatbot', function () {
     return view('chatbot.ui'); 
 })->name('chatbot.index');
+
+Route::post('/chatbot/webhook', [ChatbotWebhookController::class, 'handle'])->name('chatbot.webhook');
 
 // --- Catálogo Público ---
 Route::get('/catalogo', [ProductoCatalogoController::class, 'index'])->name('catalogo.index');
@@ -121,4 +134,55 @@ Route::prefix('admin/reportes')->name('admin.reportes.')->group(function () {
 
     // Live updates
     Route::get('/realtime', [ReporteController::class, 'datosRealtime'])->name('realtime');
+});
+
+
+
+// CARRITO Y CHECKOUT
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/cliente/catalogo', function () {
+        $productos = \App\Models\Producto::where('cantidad', '>', 0)
+                                          ->orderBy('nombre')->get();
+        return view('cliente.catalogo-cliente', compact('productos'));
+    })->name('cliente.catalogo');
+
+    Route::get('/cliente/carrito',
+        [CarritoController::class, 'index'])->name('cliente.carrito');
+
+    Route::post('/cliente/carrito/{id}',
+        [CarritoController::class, 'agregar'])->name('cliente.carrito.agregar');
+
+    Route::delete('/cliente/carrito/{id}',
+        [CarritoController::class, 'quitar'])->name('cliente.carrito.quitar');
+
+    Route::delete('/cliente/carrito',
+        [CarritoController::class, 'vaciar'])->name('cliente.carrito.vaciar');
+
+    Route::get('/cliente/checkout',
+        [CheckoutController::class, 'formulario'])->name('cliente.checkout');
+
+    Route::post('/cliente/checkout/pagar',
+        [CheckoutController::class, 'procesarPago'])->name('cliente.checkout.pagar');
+
+    Route::post('/cliente/checkout/confirmar',
+        [CheckoutController::class, 'confirmarPago'])->name('cliente.checkout.confirmar');
+});
+
+// BANDEJA ADMIN PEDIDOS
+
+Route::prefix('admin/pedidos')->name('admin.pedidos.')->group(function () {
+
+    Route::get('/',
+        [BandejaController::class, 'index'])->name('bandeja');
+
+    Route::post('/{id}/aceptar',
+        [BandejaController::class, 'aceptar'])->name('aceptar');
+
+    Route::post('/{id}/rechazar',
+        [BandejaController::class, 'rechazar'])->name('rechazar');
+
+    Route::post('/cotizacion/{id}/completar',
+        [BandejaController::class, 'completar'])->name('completar');
 });

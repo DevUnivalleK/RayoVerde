@@ -6,114 +6,124 @@
     <title>Asistente Rayo Verde</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/variables.css') }}">
     <style>
-        body { background-color: #fcfdfc; height: 100vh; display: flex; flex-direction: column; }
-        .chat-header { background: white; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 15px; }
-        #chat-container { flex: 1; overflow-y: auto; padding: 20px; }
-        .message { max-width: 80%; margin-bottom: 15px; padding: 12px 18px; border-radius: 20px; font-size: 0.95rem; }
-        .bot-msg { background: white; border: 1px solid #e9ecef; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .user-msg { background: #27ae60; color: white; align-self: flex-end; margin-left: auto; }
+        body { background-color: #fcfdfc; height: 100vh; display: flex; flex-direction: column; margin: 0; font-family: sans-serif; }
+        .chat-header { background: white; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 15px; position: sticky; top: 0; z-index: 100; }
+        #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+        .message { max-width: 80%; margin-bottom: 15px; padding: 12px 18px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; }
+        .bot-msg { background: white; border: 1px solid #e9ecef; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.02); color: #333; }
+        .user-msg { background: #27ae60; color: white; align-self: flex-end; }
         .chat-input-area { background: white; padding: 20px; border-top: 1px solid rgba(0,0,0,0.05); }
-        .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; }
+        .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #eee; }
         .input-group input { border: none; background: transparent; box-shadow: none !important; }
-        .btn-send { color: #27ae60; border: none; background: transparent; font-size: 1.2rem; }
+        .btn-send { color: #27ae60; border: none; background: transparent; font-size: 1.2rem; cursor: pointer; transition: transform 0.2s; }
+        .btn-send:hover { transform: scale(1.1); }
+        i { font-style: normal; }
     </style>
 </head>
 <body>
-
     <div class="chat-header d-flex align-items-center">
         <a href="{{ url('/') }}" class="text-dark me-3 text-decoration-none"><i class="fas fa-arrow-left"></i></a>
-        <div class="d-flex align-items-center">
-            <div class="bg-success rounded-circle me-2" style="width: 10px; height: 10px;"></div>
-            <h6 class="mb-0 fw-bold">Asistente Rayo Verde</h6>
-        </div>
+        <h6 class="mb-0 fw-bold">Asistente Rayo Verde</h6>
     </div>
 
-    <div id="chat-container" class="d-flex flex-column">
-        <div class="message bot-msg">
-            ¡Hola! Soy el asistente de <b>Rayo Verde</b>. ¿En qué puedo ayudarte hoy?
-        </div>
-    </div>
+    <div id="chat-container"></div>
 
     <div class="chat-input-area">
         <form id="chat-form">
             <div class="input-group">
-                <input type="text" id="user-input" class="form-control" placeholder="Escribe tu mensaje aquí..." autocomplete="off">
+                <input type="text" id="user-input" class="form-control" placeholder="Escribe aquí..." autocomplete="off">
                 <button type="submit" class="btn-send"><i class="fas fa-paper-plane"></i></button>
             </div>
-            <div id="performance-tag" class="text-muted small mt-2 text-center" style="font-size: 0.7rem;"></div>
         </form>
     </div>
 
     <script>
-    const chatForm = document.getElementById('chat-form');
-    const chatContainer = document.getElementById('chat-container');
-    const userInput = document.getElementById('user-input');
-    const perfTag = document.getElementById('performance-tag');
+        const chatForm = document.getElementById('chat-form');
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        
+        // Mantener el ID de conversación en la sesión del navegador
+        let currentConversationId = null;
 
-    // Variable para mantener la sesión del bot
-    let currentConversationId = null; 
+        async function sendMessage(text) {
+            if (!text) return;
 
-    chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = userInput.value.trim();
-    if(!text) return;
+            // Mostrar el mensaje del usuario (excepto el disparador inicial)
+            if (text !== 'init_bot') {
+                appendMessage(text, 'user-msg');
+            }
 
-    // 1. Renderizar mensaje del usuario
-    appendMessage(text, 'user-msg');
-    userInput.value = '';
+            // Indicador de carga
+            const loading = document.createElement('div');
+            loading.className = 'message bot-msg';
+            loading.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Pensando...';
+            chatContainer.appendChild(loading);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
 
-    // 2. MOSTRAR indicador de carga (Escribiendo...)
-    // Le ponemos una ID o clase específica para poder borrarlo luego
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'message bot-msg bot-loading';
-    loadingDiv.innerHTML = '<i>Escribiendo...</i>';
-    chatContainer.appendChild(loadingDiv);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+            try {
+                const response = await fetch('{{ route("chatbot.webhook") }}', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}' //  Token de seguridad para Laravel
+                    },
+                    body: JSON.stringify({ 
+                        message: (text === 'init_bot' ? 'hola' : text), 
+                        id_conversacion: currentConversationId 
+                    })
+                });
 
-    try {
-        // 3. Llamada a la API (Aquí es donde ocurren esos 5-12 segundos)
-        const response = await fetch('/api/chatbot/webhook', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                message: text,
-                id_conversacion: currentConversationId 
-            })
-        });
+                const data = await response.json();
+                loading.remove();
 
-        const data = await response.json();
+                if (data.id_conversacion) {
+                    currentConversationId = data.id_conversacion;
+                }
 
-        // 4. QUITAR indicador de carga antes de mostrar la respuesta real
-        loadingDiv.remove(); 
+                if (data.reply) {
+                    appendMessage(data.reply, 'bot-msg');
+                }
 
-        if (data.id_conversacion) {
-            currentConversationId = data.id_conversacion;
+                // Manejo de redirección si el bot finaliza la cotización
+                if (data.redirect) {
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 5500);
+                }
+
+            } catch (e) {
+                loading.remove();
+                appendMessage("Lo siento, tuve un problema de conexión. Inténtalo de nuevo.", 'bot-msg');
+                console.error("Chatbot Error:", e);
+            }
         }
 
-        // 5. Renderizar respuesta real del Bot
-        appendMessage(data.reply, 'bot-msg');
-        
-        perfTag.innerHTML = `Respuesta en: <b>${data.timing}s</b> ${data.timing < 3 ? '✅' : '❌'}`;
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (text) {
+                sendMessage(text);
+                userInput.value = '';
+            }
+        });
 
-    } catch (error) {
-        // En caso de error, también quitamos el "Escribiendo..."
-        loadingDiv.remove(); 
-        appendMessage("Lo siento, tuve un problema de conexión.", 'bot-msg');
-    }
-});
-
- 
-function appendMessage(text, className) {
+  function appendMessage(text, className) {
     const div = document.createElement('div');
     div.className = `message ${className}`;
-    // Esta línea convierte los \n en saltos de línea reales (BR)
-    div.innerHTML = text.replace(/\\n/g, '<br>').replace(/\n/g, '<br>'); 
+    
+    // Corregido: Primero limpia posibles escapes dobles y luego convierte a <br>
+    let formattedText = text.replace(/\\n/g, '\n').replace(/\n/g, '<br>');
+    
+    div.innerHTML = formattedText;
     chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
-
-</script>
+        
+        // Iniciar el chat automáticamente al cargar
+        window.onload = () => {
+            sendMessage('init_bot');
+        };
+    </script>
 </body>
 </html>

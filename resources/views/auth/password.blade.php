@@ -8,7 +8,7 @@
         background: linear-gradient(135deg, #f0f7f2 0%, #d9e8df 100%);
         height: 100vh;
         display: flex;
-        justify-content: center; /* Centra horizontalmente */
+        justify-content: center; 
         align-items: center;
         margin: 0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -56,7 +56,7 @@
     .form-control {
         width: 100%;
         box-sizing: border-box;
-        border-radius: 15px !important; /* Ajustado para que no dependa de input-group */
+        border-radius: 15px !important;
         border: 1px solid #e2e8f0;
         padding: 12px;
         font-size: 0.95rem;
@@ -87,49 +87,30 @@
         box-shadow: 0 10px 20px rgba(39, 174, 96, 0.2);
         filter: brightness(1.1);
     }
-
-    .footer-text {
-        margin-top: 20px;
-        font-size: 0.9rem;
-        color: #718096;
-    }
-
-    .footer-text a {
-        color: var(--verde-primario);
-        text-decoration: none;
-        font-weight: 600;
-    }
 </style>
 
 <div class="login-card">
     <span class="brand-logo">Rayo Verde</span>
-    <h2 style="font-size: 1.2rem; color: #2d3748; margin-bottom: 30px;">Iniciar Sesión</h2>
+    <h2 style="font-size: 1.2rem; color: #2d3748; margin-bottom: 30px;">Cambiar Contraseña</h2>
 
-    <form action="{{ route('login.post') }}" method="POST">
+    <form action="{{ route('password.recover') }}" method="POST">
         @csrf 
+
         <div class="form-group">
             <label class="form-label">Correo Electrónico</label>
-            <input type="email" name="correo" class="form-control" value="{{ old('correo') }}" required placeholder="ejemplo@correo.com">
-          
+            <input type="email" name="correo" class="form-control" required placeholder="ejemplo@correo.com">
         </div>
 
         <div class="form-group">
-            <label class="form-label">Contraseña</label>
-            <input type="password" name="password" class="form-control" required placeholder="••••••••">
-            @error('correo')
-            <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
-            {{ $message }}
-        </span>
-    @enderror
+            <label class="form-label">Respuesta Secreta</label>
+            <input type="text" name="respuesta_secreta" class="form-control" required placeholder="Tu respuesta">
         </div>
 
-        <button type="submit" class="btn-login">INGRESAR</button>
-    </form>
+        <div class="form-group">
+            <label class="form-label">Nueva Contraseña</label>
+            <input type="password" name="password" class="form-control" required placeholder="••••••••">
+        </div>
 
-    <p class="footer-text">
-        ¿No tienes cuenta? <a href="{{ route('registro') }}">Regístrate aquí</a>
-    </p>
-    <p class="footer-text">
-        ¿Olvidaste la contraseña? <a href="{{ route('password') }}">Cambiar Contraseña</a>
-    </p>
+        <button type="submit" class="btn-login">Cambiar Contraseña</button>
+    </form>
 </div>
