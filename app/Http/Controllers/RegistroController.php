@@ -13,16 +13,26 @@ class RegistroController extends Controller
 {
     public function registrar(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'correo' => 'required|string|email|max:255|unique:usuarios,correo',
-            'password' => 'required|string|min:8|confirmed',
-            'respuesta_secreta' => 'required|string|max:255',
-            'empresa' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:255',
-            'direccion' => 'nullable|string|max:255'
-        ]);
+       $request->validate([
+        'nombre' => ['required', 'string', 'max:255', 'regex:/^\S+(?: \S+)?$/'],
+        'apellido' => ['required', 'string', 'max:255', 'regex:/^\S+(?: \S+)?$/'],
+        'correo' => 'required|string|email|max:255|unique:usuarios,correo',
+        'password' => 'required|string|min:8|confirmed',
+        'respuesta_secreta' => 'required|string|max:255',
+        'empresa' => 'nullable|string|max:255',
+        'telefono' => 'nullable|numeric|digits_between:7,15',
+        'direccion' => 'nullable|string|max:255'
+    ], [
+        'nombre.regex' => 'El nombre solo puede contener un espacio y no debe tener espacios al inicio o final.',
+        'apellido.regex' => 'El apellido solo puede contener un espacio y no debe tener espacios al inicio o final.',
+        'telefono.numeric' => 'El campo teléfono solo debe contener números.',
+        'telefono.digits_between' => 'El teléfono debe tener entre 7 y 15 dígitos.',
+        'required' => 'El campo :attribute es obligatorio.',
+        'email' => 'El formato del correo no es válido.',
+        'unique' => 'Este correo ya está registrado.',
+        'confirmed' => 'La confirmación de la contraseña no coincide.',
+        'password.min' => 'La contraseña debe tener al menos :min caracteres.',
+    ]);
 
         try {
             $usuario = DB::transaction(function () use ($request) {
@@ -32,7 +42,7 @@ class RegistroController extends Controller
                     'correo'            => $request->correo,
                     'password_hash'     => Hash::make($request->password), 
                     'activo'            => true,
-                    'respuesta_secreta' => $request->respuesta_secreta    
+                    'respuesta_secreta' => $request->respuesta_secreta
                 ]);
 
                 $user->cliente()->create([

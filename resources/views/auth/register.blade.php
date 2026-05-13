@@ -114,6 +114,15 @@
         text-decoration: none;
         font-weight: 600;
     }
+
+    .form-control.is-invalid {
+    border-color: #e53e3e !important;
+    background-color: #fffafb;
+}
+
+.form-control.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+}
 </style>
 
 <div class="login-card">
@@ -126,32 +135,62 @@
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label">Nombre</label>
-                <input type="text" name="nombre" class="form-control" required placeholder="Tu nombre">
+                <input type="text" name="nombre" class="form-control" value="{{ old('nombre') }}" required placeholder="Tu nombre">
+                @error('nombre')
+        <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
             </div>
             <div class="form-group">
                 <label class="form-label">Apellido</label>
-                <input type="text" name="apellido" class="form-control" required placeholder="Tu apellido">
+                <input type="text" name="apellido" class="form-control" value="{{ old('apellido') }}" required placeholder="Tu apellido">
+                @error('apellido')
+        <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
             </div>
         </div>
 
         <div class="form-group">
             <label class="form-label">Correo Electrónico</label>
-            <input type="email" name="correo" class="form-control" required placeholder="correo@ejemplo.com">
+            <input type="email" name="correo" class="form-control" value="{{ old('correo') }}" required placeholder="correo@ejemplo.com">
+            @error('correo')
+        <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
         </div>
 
         <div class="form-group">
             <label class="form-label">Empresa (Opcional)</label>
-            <input type="text" name="empresa" class="form-control" placeholder="Nombre de tu empresa">
+            <input type="text" name="empresa" class="form-control" value="{{ old('empresa') }}" placeholder="Nombre de tu empresa">
+            @error('empresa')
+        <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Teléfono</label>
-                <input type="text" name="telefono" class="form-control" placeholder="Nro de contacto">
+                <label class="form-label">Teléfono (Opcional)</label>
+                <input type="text" name="telefono" class="form-control" value="{{ old('telefono') }}" placeholder="Nro de contacto">
+                @error('telefono')
+        <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
             </div>
             <div class="form-group">
-                <label class="form-label">Dirección</label>
-                <input type="text" name="direccion" class="form-control" placeholder="Ubicación">
+                <label class="form-label">Dirección (Opcional)</label>
+                <input type="text" name="direccion" class="form-control" value="{{ old('direccion') }}" placeholder="Ubicación">
+                @error('direccion')
+        <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
             </div>
         </div>
 
@@ -159,16 +198,31 @@
             <div class="form-group">
                 <label class="form-label">Contraseña</label>
                 <input type="password" name="password" class="form-control" required placeholder="••••••••">
+                @error('password')
+        <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
             </div>
             <div class="form-group">
                 <label class="form-label">Confirmar Contraseña</label>
                 <input type="password" name="password_confirmation" class="form-control" required placeholder="••••••••">
+                @error('password_confirmation')
+        <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
             </div>
         </div>
 
         <div class="form-group">
             <label class="form-label">Respuesta Secreta</label>
             <input type="text" name="respuesta_secreta" class="form-control" required placeholder="Ej: Nombre de tu mascota">
+            @error('correo')
+        <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
         </div>
 
         <p class="footer">
