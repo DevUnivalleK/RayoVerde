@@ -34,7 +34,7 @@ class LoginController extends Controller
         RateLimiter::hit($key, 60);
 
         return back()->withErrors([
-            'correo' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
+            'correo' => 'El correo eléctronico o la contraseña son incorrectos.',
         ])->onlyInput('correo');
     }
 

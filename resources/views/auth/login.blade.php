@@ -109,12 +109,18 @@
         @csrf 
         <div class="form-group">
             <label class="form-label">Correo Electrónico</label>
-            <input type="email" name="correo" class="form-control" required placeholder="ejemplo@correo.com">
+            <input type="email" name="correo" class="form-control" value="{{ old('correo') }}" required placeholder="ejemplo@correo.com">
+          
         </div>
 
         <div class="form-group">
             <label class="form-label">Contraseña</label>
             <input type="password" name="password" class="form-control" required placeholder="••••••••">
+            @error('correo')
+            <span style="color: #e53e3e; font-size: 0.75rem; margin-top: 5px; display: block;">
+            {{ $message }}
+        </span>
+    @enderror
         </div>
 
         <button type="submit" class="btn-login">INGRESAR</button>
