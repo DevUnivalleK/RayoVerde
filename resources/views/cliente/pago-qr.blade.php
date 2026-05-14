@@ -275,7 +275,7 @@ body { font-family: 'Sora', sans-serif; background: var(--surface); color: var(-
 
             {{-- QR --}}
             <div class="rv-qr-img-wrap">
-                <img src="/images/qrPago.png" alt="QR de pago Rayo Verde">
+                <img src="{{ asset('images/qrPago.png') }}" alt="QR de pago Rayo Verde">
             </div>
 
             {{-- Monto --}}

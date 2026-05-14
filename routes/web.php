@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/checkout', [CheckoutController::class, 'formulario'])->name('checkout');
         Route::post('/checkout/pagar', [CheckoutController::class, 'procesarPago'])->name('checkout.pagar');
+        Route::post('/checkout/confirmar', [CheckoutController::class, 'confirmarPago'])->name('checkout.confirmar');
     });
 
     // Cotizaciones del Usuario
