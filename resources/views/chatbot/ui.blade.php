@@ -1,129 +1,170 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente Rayo Verde</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { background-color: #fcfdfc; height: 100vh; display: flex; flex-direction: column; margin: 0; font-family: sans-serif; }
-        .chat-header { background: white; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 15px; position: sticky; top: 0; z-index: 100; }
-        #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
-        .message { max-width: 80%; margin-bottom: 15px; padding: 12px 18px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; }
-        .bot-msg { background: white; border: 1px solid #e9ecef; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.02); color: #333; }
-        .user-msg { background: #27ae60; color: white; align-self: flex-end; }
-        .chat-input-area { background: white; padding: 20px; border-top: 1px solid rgba(0,0,0,0.05); }
-        .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #eee; }
-        .input-group input { border: none; background: transparent; box-shadow: none !important; }
-        .btn-send { color: #27ae60; border: none; background: transparent; font-size: 1.2rem; cursor: pointer; transition: transform 0.2s; }
-        .btn-send:hover { transform: scale(1.1); }
-        i { font-style: normal; }
-    </style>
-</head>
-<body>
-    <div class="chat-header d-flex align-items-center">
-        <a href="{{ url('/') }}" class="text-dark me-3 text-decoration-none"><i class="fas fa-arrow-left"></i></a>
-        <h6 class="mb-0 fw-bold">Asistente Rayo Verde</h6>
-    </div>
+@extends('layouts.user-sidebar')
+@section('title', 'ChatBot de Soporte')
+@section('breadcrumb', 'ChatBot')
 
-    <div id="chat-container"></div>
-
-    <div class="chat-input-area">
-        <form id="chat-form">
-            <div class="input-group">
-                <input type="text" id="user-input" class="form-control" placeholder="Escribe aquí..." autocomplete="off">
-                <button type="submit" class="btn-send"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </form>
-    </div>
-
-    <script>
-        const chatForm = document.getElementById('chat-form');
-        const chatContainer = document.getElementById('chat-container');
-        const userInput = document.getElementById('user-input');
+@section('content')
+<div class="max-w-4xl mx-auto h-[calc(100vh-180px)] flex flex-col">
+    <div class="bg-white rounded-2xl shadow-sm border border-[#d4edda] flex flex-col flex-1 overflow-hidden">
         
-        // Mantener el ID de conversación en la sesión del navegador
-        let currentConversationId = null;
+        <div class="px-6 py-4 flex items-center gap-3 bg-gradient-to-r from-[#0e2a10] to-[#1e6b2e] text-white">
+            <div class="w-10 h-10 rounded-full bg-[#4CAF50]/20 flex items-center justify-center border border-[#4CAF50]/30">
+                <i class="fas fa-robot text-lg"></i>
+            </div>
+            <div>
+                <h2 class="font-display text-base tracking-wide">ASISTENTE VIRTUAL</h2>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 bg-[#7BE07B] rounded-full animate-pulse"></span>
+                    <span class="text-[10px] uppercase tracking-widest text-[#7dcba8]">En línea</span>
+                </div>
+            </div>
+        </div>
 
-        async function sendMessage(text) {
-            if (!text) return;
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f8faf7]">
+            </div>
 
-            // Mostrar el mensaje del usuario (excepto el disparador inicial)
-            if (text !== 'init_bot') {
-                appendMessage(text, 'user-msg');
-            }
+        <div class="p-4 bg-white border-t border-[#eef4ea]">
+            <form id="chat-form" class="relative flex items-center gap-2">
+                <input type="text" id="user-input" 
+                    class="w-full bg-[#f5fbf2] border border-[#c3e6cb] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#4CAF50] focus:ring-4 focus:ring-[#4CAF50]/10 transition-all placeholder-[#7dcba8]"
+                    placeholder="Escribe tu mensaje aquí..." autocomplete="off">
+                
+                <button type="submit" class="btn-send w-11 h-11 rounded-xl bg-[#4CAF50] text-white flex items-center justify-center shadow-lg shadow-[#4CAF50]/20 hover:bg-[#27ae60] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-paper-plane text-sm"></i>
+                </button>
+            </form>
+            <p class="text-[10px] text-center text-[#3a6040] mt-2 opacity-60">
+                Al usar el chat, aceptas el procesamiento automático de tus datos para cotizaciones.
+            </p>
+        </div>
+    </div>
+</div>
+@endsection
 
-            // Indicador de carga
-            const loading = document.createElement('div');
-            loading.className = 'message bot-msg';
-            loading.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Pensando...';
-            chatContainer.appendChild(loading);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+@push('styles')
+<style>
+    /* Estilos de los globos de texto */
+    .message {
+        max-width: 85%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        position: relative;
+        animation: fadeIn 0.3s ease-out;
+    }
 
-            try {
-                const response = await fetch('{{ route("chatbot.webhook") }}', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}' //  Token de seguridad para Laravel
-                    },
-                    body: JSON.stringify({ 
-                        message: (text === 'init_bot' ? 'hola' : text), 
-                        id_conversacion: currentConversationId 
-                    })
-                });
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-                const data = await response.json();
-                loading.remove();
+    .user-msg {
+        align-self: flex-end;
+        background-color: #4CAF50;
+        color: white;
+        border-bottom-right-radius: 4px;
+        margin-left: auto;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+    }
 
-                if (data.id_conversacion) {
-                    currentConversationId = data.id_conversacion;
-                }
+    .bot-msg {
+        align-self: flex-start;
+        background-color: white;
+        color: #1d2b1a;
+        border: 1px solid #d4edda;
+        border-bottom-left-radius: 4px;
+        margin-right: auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
 
-                if (data.reply) {
-                    appendMessage(data.reply, 'bot-msg');
-                }
+    /* Scrollbar personalizado para el chat */
+    #chat-container::-webkit-scrollbar { width: 4px; }
+    #chat-container::-webkit-scrollbar-track { background: transparent; }
+    #chat-container::-webkit-scrollbar-thumb { background: #c3e6cb; border-radius: 10px; }
+</style>
+@endpush
 
-                // Manejo de redirección si el bot finaliza la cotización
-                if (data.redirect) {
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 5500);
-                }
+@push('scripts')
+<script>
+    // Tu script corregido anteriormente encaja aquí perfectamente
+    // Solo asegúrate de que la función appendMessage use clases de Tailwind si es necesario, 
+    // pero con el CSS de arriba ya tienes el diseño de las burbujas.
+    const chatForm = document.getElementById('chat-form');
+    const chatContainer = document.getElementById('chat-container');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.querySelector('.btn-send');
+    let currentConversationId = null;
+    let isProcessing = false;
 
-            } catch (e) {
-                loading.remove();
-                appendMessage("Lo siento, tuve un problema de conexión. Inténtalo de nuevo.", 'bot-msg');
-                console.error("Chatbot Error:", e);
-            }
+    async function sendMessage(text) {
+        if (!text || isProcessing) return;
+        isProcessing = true;
+        userInput.disabled = true;
+        sendBtn.disabled = true;
+        userInput.placeholder = "Esperando respuesta...";
+
+        if (text !== 'init_bot') {
+            appendMessage(text, 'user-msg');
         }
 
-        chatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const text = userInput.value.trim();
-            if (text) {
-                sendMessage(text);
-                userInput.value = '';
-            }
-        });
+        const loading = document.createElement('div');
+        loading.className = 'message bot-msg italic flex items-center gap-2';
+        loading.innerHTML = '<i class="fas fa-circle-notch fa-spin text-[#4CAF50]"></i> <span class="text-[#7dcba8]">Escribiendo...</span>';
+        chatContainer.appendChild(loading);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
 
-  function appendMessage(text, className) {
-    const div = document.createElement('div');
-    div.className = `message ${className}`;
-    
-    // Corregido: Primero limpia posibles escapes dobles y luego convierte a <br>
-    let formattedText = text.replace(/\\n/g, '\n').replace(/\n/g, '<br>');
-    
-    div.innerHTML = formattedText;
-    chatContainer.appendChild(div);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-        
-        // Iniciar el chat automáticamente al cargar
-        window.onload = () => {
-            sendMessage('init_bot');
-        };
-    </script>
-</body>
-</html>
+        try {
+            const response = await fetch('{{ route("chatbot.webhook") }}', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}' 
+                },
+                body: JSON.stringify({ 
+                    message: (text === 'init_bot' ? 'hola' : text), 
+                    id_conversacion: currentConversationId 
+                })
+            });
+
+            const data = await response.json();
+            loading.remove();
+
+            if (data.id_conversacion) currentConversationId = data.id_conversacion;
+            if (data.reply) appendMessage(data.reply, 'bot-msg');
+
+            if (data.redirect) {
+                setTimeout(() => { window.location.href = data.redirect; }, 5000);
+            }
+        } catch (e) {
+            loading.remove();
+            appendMessage("Lo siento, hubo un error de conexión.", 'bot-msg');
+        } finally {
+            isProcessing = false;
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+            userInput.placeholder = "Escribe aquí...";
+            userInput.focus();
+        }
+    }
+
+    function appendMessage(text, className) {
+        const div = document.createElement('div');
+        div.className = `message ${className}`;
+        let formattedText = text.replace(/\\n/g, '\n').replace(/\n/g, '<br>');
+        div.innerHTML = formattedText;
+        chatContainer.appendChild(div);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = userInput.value.trim();
+        if (text) {
+            sendMessage(text);
+            userInput.value = '';
+        }
+    });
+
+    window.onload = () => sendMessage('init_bot');
+</script>
+@endpush

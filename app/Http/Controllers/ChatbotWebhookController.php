@@ -88,7 +88,7 @@ class ChatbotWebhookController extends Controller
                     $nuevoEstado = 'ESPERANDO_FAQ';
                 } elseif ($userMessage == '3') {
                     $this->finalizarConversacion($idConversacion, 'DERIVADA');
-                    $reply = '⏳ Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.';
+                    $reply = ' Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.';
                     $this->registrarLog($idConversacion, 'bot', $reply);
                     return response()->json(['reply' => $reply, 'redirect' => route('home')]);
                 }
@@ -224,7 +224,7 @@ class ChatbotWebhookController extends Controller
                 foreach ($carrito as $c) {
                     $res .= "- {$c['nombre']}\n  {$c['cant']} {$c['uni']} -> Bs. " . number_format($c['sub'], 2) . "\n\n";
                 }
-                $reply = $res . "----------\nTOTAL: Bs. " . number_format($total, 2) . "\n\n1. Confirmar Cotizacion y Continuar con la Compra\n2. Cancelar todo";
+                $reply = $res . "----------\nTOTAL: Bs. " . number_format($total, 2) . "\n\n1. Confirmar Cotizacion y Elevar a Gerencia para confirmar adquisicion \n2. Cancelar todo";
             }
             elseif ($nuevoEstado == 'SOLICITAR_CANTIDAD') {
                 $uni = session('temp_unidad');
@@ -277,10 +277,9 @@ class ChatbotWebhookController extends Controller
             session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
             $this->registrarLog($id, 'bot', "Cotización guardada exitosamente.");
             
-            return response()->json(['reply' => 'Cotizacion guardada exitosamente.', 'redirect' => route('home')]);
             return response()->json([
-                   'reply' => " *Cotización guardada correctamente.*\n\nEspera un momento, por favor... te estamos dirigiendo a la sección de compra para finalizar tu pedido. ", 
-                   'redirect' => route('home')
+                   'reply' => " Cotización guardada correctamente.\n\nEsta propuesta ha sido elevada a nuestra Gerencia para su validación técnica y comercial. "
+                
             ]);
         } catch (\Exception $e) {
             return response()->json(['reply' => 'Error técnico, intente más tarde.', 'id_conversacion' => $id]);
