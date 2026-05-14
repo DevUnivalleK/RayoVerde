@@ -82,6 +82,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/cotizaciones/historial', [CotizacionController::class, 'historial']);
     Route::get('/cotizaciones/{id}', [CotizacionController::class, 'show']);
     Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'generarPDF']);
+
+    Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'generarPDF']);
+    Route::get('/cotizaciones/{id}/excel', [CotizacionController::class, 'generarExcel']);
+    Route::post('/cotizaciones/{id}/enviar-correo', [CotizacionController::class, 'enviarCorreo'])
+     ->name('cotizaciones.enviarCorreo');
+     
 });
 
 /*
