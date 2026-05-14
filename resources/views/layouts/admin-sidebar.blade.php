@@ -181,8 +181,8 @@
             <i class="fas fa-user-tie text-white" style="font-size:0.65rem;"></i>
         </div>
         <div class="min-w-0 flex-1">
-            <p style="font-size:0.77rem; font-weight:600; color:#c8e6c8;">Admin Rayo Verde</p>
-            <p style="font-size:0.63rem; color:#58744f;" class="truncate">admin@rayoverde.bo</p>
+            <p style="font-size:0.77rem; font-weight:600; color:#c8e6c8;">{{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</p>
+            <p style="font-size:0.63rem; color:#58744f;" class="truncate">{{ Auth::user()->correo }}</p>
         </div>
         <a href="{{ url('/login') }}" title="Cerrar sesión"
            style="color:#58744f;" class="flex-shrink-0 transition-colors"
@@ -329,7 +329,7 @@
                             <i class="fas fa-user text-white" style="font-size:0.62rem;"></i>
                         </div>
                         <div class="hidden sm:block text-left">
-                            <p style="font-size:0.73rem; font-weight:700; color:#1b4d2b; line-height:1.2;">Admin</p>
+                            <p style="font-size:0.73rem; font-weight:700; color:#1b4d2b; line-height:1.2;">{{ Auth::user()->nombre }}</p>
                             <p style="font-size:0.62rem; color:#4CAF50; line-height:1.2;">Rayo Verde</p>
                         </div>
                         <i class="fas fa-chevron-down hidden sm:block" style="font-size:0.55rem; color:#4CAF50;"></i>
@@ -338,8 +338,8 @@
                     <div id="user-panel"
                          class="hidden dropdown-panel absolute right-0 top-11 w-52 z-50 overflow-hidden py-1">
                         <div class="px-4 py-2.5" style="background:#f5fbf2; border-bottom:1px solid #cfe6cb;">
-                            <p style="font-size:0.82rem; font-weight:700; color:#1b4d2b;">Admin Rayo Verde</p>
-                            <p style="font-size:0.68rem; color:#4CAF50;" class="truncate">admin@rayoverde.bo</p>
+                            <p style="font-size:0.82rem; font-weight:700; color:#1b4d2b;">{{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</p>
+                            <p style="font-size:0.68rem; color:#4CAF50;" class="truncate">{{ Auth::user()->correo }}</p>
                         </div>
                         <a href="{{ route('admin.pedidos.bandeja') }}"
                            class="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
