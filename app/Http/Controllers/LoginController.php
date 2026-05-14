@@ -28,6 +28,12 @@ class LoginController extends Controller
             $request->session()->regenerate();
             RateLimiter::clear($key);
 
+            $user = Auth::user();
+
+            if ($user->roles->contains('id_rol', 2)) {
+                return redirect()->route('admin.dashboard')->with('success', 'Bienvenido, Administrador.');
+            }
+
             return redirect()->intended(route('home'))->with('success', 'Bienvenido de nuevo.');
         }
 

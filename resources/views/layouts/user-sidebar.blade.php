@@ -355,10 +355,10 @@
         </div>
         <div class="min-w-0 flex-1">
             <p style="font-size:0.77rem; font-weight:600; color:#c8e6c8;">
-                {{ session('usuario_nombre', 'Mi Cuenta') }}
+                {{ Auth::user()->nombre }} {{ Auth::user()->apellido }}
             </p>
             <p style="font-size:0.63rem; color:#3d6040;" class="truncate">
-                {{ session('usuario_email', 'cliente@rayoverde.bo') }}
+                {{ Auth::user()->correo }}
             </p>
         </div>
         <a href="#" onclick="document.getElementById('form-logout').submit(); return false;"
@@ -497,7 +497,7 @@
                         </div>
                         <div class="hidden sm:block text-left">
                             <p style="font-size:0.73rem; font-weight:700; color:#1a5c30; line-height:1.2;">
-                                {{ session('usuario_nombre', 'Mi Cuenta') }}
+                               {{ Auth::user()->nombre }} {{ Auth::user()->apellido }}
                             </p>
                             <p style="font-size:0.62rem; color:#4CAF50; line-height:1.2;">Cliente</p>
                         </div>
@@ -508,10 +508,10 @@
                          class="hidden dropdown-panel absolute right-0 top-11 w-52 z-50 overflow-hidden py-1">
                         <div class="px-4 py-2.5" style="background:#f5fbf2; border-bottom:1px solid #c3e6cb;">
                             <p style="font-size:0.82rem; font-weight:700; color:#1a5c30;">
-                                {{ session('usuario_nombre', 'Mi Cuenta') }}
+                                {{ Auth::user()->nombre }} {{ Auth::user()->apellido }}
                             </p>
                             <p style="font-size:0.68rem; color:#4CAF50;" class="truncate">
-                                {{ session('usuario_email', 'cliente') }}
+                                {{ Auth::user()->correo }}
                             </p>
                         </div>
                         <a href="{{ route('cliente.carrito') }}"
