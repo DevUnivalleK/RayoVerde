@@ -7,9 +7,10 @@
 <div class="p-6">
     <h1 class="text-2xl font-bold text-green-700 mb-6">Reporte General</h1>
     
-    <!-- Filtros -->
+     
     <div class="bg-white p-4 rounded shadow mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
             <div>
                 <label class="block text-sm font-medium mb-1">Fecha Inicio</label>
                 <input type="date" id="fecha_inicio" class="w-full border rounded px-3 py-2">
@@ -22,16 +23,16 @@
                 <button id="btn-filtrar" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
                     <i class="fas fa-search"></i> Filtrar
                 </button>
-                <button id="btn-excel" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+               <!-- <button id="btn-excel" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                     <i class="fas fa-file-excel"></i> Excel
                 </button>
                 <button id="btn-pdf" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
                     <i class="fas fa-file-pdf"></i> PDF
-                </button>
+                </button>-->
             </div>
         </div>
     </div>
-    
+
     <!-- Tarjetas de métricas -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded shadow p-4">

@@ -284,7 +284,7 @@
             <i class="fas fa-home ni"></i><span>Inicio</span>
         </a>
 
-        <a href="{{ route('catalogo.index') }}" class="nav-item">
+        <a href="{{ route('cliente.catalogo') }}" class="nav-item">
             <i class="fas fa-leaf ni"></i><span>Catálogo de Aceites</span>
         </a>
 
@@ -304,7 +304,7 @@
             <i class="fas fa-credit-card ni"></i><span>Checkout</span>
         </a>
 
-        {{-- Mis Pedidos --}}
+       <!-- {{-- Mis Pedidos --}}
         <button onclick="toggleSubmenu('sub-pedidos',this)" class="nav-item">
             <i class="fas fa-box ni"></i>
             <span class="flex-1 text-left">Mis Pedidos</span>
@@ -317,7 +317,7 @@
             <a href="#" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
                 <i class="fas fa-check-circle ni" style="font-size:0.68rem;"></i><span>Completados</span>
             </a>
-        </div>
+        </div>-->
 
         <a href="{{ url('/mis-cotizaciones') }}" class="nav-item">
             <i class="fas fa-file-invoice-dollar ni"></i><span>Mis Cotizaciones</span>
@@ -331,9 +331,9 @@
             <i class="fas fa-robot ni"></i><span>ChatBot</span>
         </a>
 
-        <a href="#" class="nav-item">
+        <!-- <a href="#" class="nav-item">
             <i class="fas fa-question-circle ni"></i><span>Ayuda / FAQ</span>
-        </a>
+        </a> -->
 
         <hr class="sdiv">
 
