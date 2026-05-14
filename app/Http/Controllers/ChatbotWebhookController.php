@@ -255,6 +255,7 @@ class ChatbotWebhookController extends Controller
                     'codigo' => 'COT-' . strtoupper(uniqid()),
                     'id_usuario' => $idUsuarioLogueado,
                     'id_estado' => 1,
+                    'subtotal' => $total,
                     'total' => $total,
                     'generado_en' => now()
                 ], 'id_cotizacion');
