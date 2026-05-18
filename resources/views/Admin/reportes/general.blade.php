@@ -86,9 +86,9 @@ function cargarReporte() {
         .then(data => {
             if (data.success) {
                 document.getElementById('total_cotizaciones').innerText = data.resumen.total_cotizaciones || 0;
-                document.getElementById('total_ventas').innerText = 'Bs ' + (data.resumen.total_ventas || 0);
-                document.getElementById('promedio').innerText = 'Bs ' + (data.resumen.promedio || 0);
-                document.getElementById('total_descuentos').innerText = 'Bs ' + (data.resumen.total_descuentos || 0);
+                document.getElementById('total_ventas').innerText = 'Bs ' + (parseFloat(data.resumen.total_ventas).toFixed(2) || 0);
+                document.getElementById('promedio').innerText = 'Bs ' + (parseFloat(data.resumen.promedio).toFixed(2) || 0);
+                document.getElementById('total_descuentos').innerText = 'Bs ' + (parseFloat(data.resumen.total_descuentos).toFixed(2) || 0);
                 
                 const tbody = document.getElementById('tabla-cotizaciones');
                 if (data.cotizaciones.length === 0) {
@@ -113,14 +113,14 @@ function cargarReporte() {
 document.getElementById('btn-excel')?.addEventListener('click', () => {
     const fechaInicio = document.getElementById('fecha_inicio').value;
     const fechaFin = document.getElementById('fecha_fin').value;
-    window.location.href = `/admin/reportes/exportar.excel?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+    window.location.href = `/admin/reportes/exportar/excel?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
 });
 
 // Exportar PDF
 document.getElementById('btn-pdf')?.addEventListener('click', () => {
     const fechaInicio = document.getElementById('fecha_inicio').value;
     const fechaFin = document.getElementById('fecha_fin').value;
-    window.location.href = `/admin/reportes/exportar.pdf?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+    window.location.href = `/admin/reportes/exportar/pdf?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
 });
 
 // Fechas por defecto

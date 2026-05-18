@@ -139,4 +139,9 @@ Route::middleware(['auth', 'es_admin'])->prefix('admin')->name('admin.')->group(
         Route::get('/metricas', [ReporteController::class, 'metricas']);
     });
 
+    // Gestión de usuarios
+        Route::get('/usuarios', [App\Http\Controllers\Admin\UsuarioController::class, 'index'])->name('usuarios.index');
+        Route::post('/usuarios/{id}/rol', [App\Http\Controllers\Admin\UsuarioController::class, 'updateRol'])->name('usuarios.updateRol');
+        Route::get('/usuarios/{id}/toggle', [App\Http\Controllers\Admin\UsuarioController::class, 'toggleActivo'])->name('usuarios.toggleActivo');
+
 });

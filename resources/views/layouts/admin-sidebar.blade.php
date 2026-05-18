@@ -154,6 +154,11 @@
 
         <p class="slabel">Configuración</p>
 
+
+        <a href="{{ route('admin.usuarios.index') }}" class="nav-item">
+            <i class="fas fa-users ni"></i><span>Gestión de Usuarios</span>
+        </a>
+
         <a href="#" class="nav-item">
             <i class="fas fa-sliders-h ni"></i><span>Config. Comercial</span>
         </a>
