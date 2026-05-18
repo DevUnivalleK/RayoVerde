@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ReporteExport;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class ReporteController extends Controller
 {
@@ -189,8 +191,32 @@ class ReporteController extends Controller
         ]);
     }
     public function getUsuarios()
-{
-    $usuarios = DB::table('usuarios')->select('id_usuario', 'nombre', 'apellido')->get();
-    return response()->json($usuarios);
-}
+    {
+        $usuarios = DB::table('usuarios')->select('id_usuario', 'nombre', 'apellido')->get();
+        return response()->json($usuarios);
+    }
+    public function enviarReportePorCorreo(Request $request)
+    {
+        $admin = Auth::user();
+
+        $fechaInicio = $request->fecha_inicio ?? now()->startOfMonth()->toDateString();
+        $fechaFin = $request->fecha_fin ?? now()->toDateString();
+
+        $cotizaciones = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
+            ->with(['usuario'])
+            ->get();
+
+        // Mismo PDF que ya descargas
+        $pdf = Pdf::loadView('pdf.reporte', compact(
+            'cotizaciones',
+            'fechaInicio',
+            'fechaFin'
+        ));
+
+        Mail::to($admin->correo)->send(
+            new \App\Mail\ReporteMail($admin, $pdf->output())
+        );
+
+        return back()->with('success', 'Reporte enviado a ' . $admin->correo);
+    }
 }

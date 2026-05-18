@@ -144,5 +144,7 @@ Route::middleware(['auth', 'es_admin'])->prefix('admin')->name('admin.')->group(
         Route::get('/filtrado-data', [ReporteController::class, 'reporteFiltrado']);
         Route::get('/metricas', [ReporteController::class, 'metricas']);
     });
+    Route::post('/enviar-reporte', [ReporteController::class, 'enviarReportePorCorreo'])
+    ->name('enviar.reporte');
 
 });
