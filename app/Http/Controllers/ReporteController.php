@@ -199,24 +199,21 @@ class ReporteController extends Controller
     {
         $admin = Auth::user();
 
-        $fechaInicio = $request->fecha_inicio ?? now()->startOfMonth()->toDateString();
-        $fechaFin = $request->fecha_fin ?? now()->toDateString();
+        $body        = $request->json()->all();
+        $fechaInicio = $body['fecha_inicio'] ?? $request->fecha_inicio ?? now()->startOfMonth()->toDateString();
+        $fechaFin    = $body['fecha_fin']    ?? $request->fecha_fin    ?? now()->toDateString();
 
-        $cotizaciones = Cotizacion::whereBetween('generado_en', [$fechaInicio, $fechaFin])
-            ->with(['usuario'])
-            ->get();
+        $cotizaciones = Cotizacion::whereDate('generado_en', '>=', $fechaInicio)
+                                ->whereDate('generado_en', '<=', $fechaFin)
+                                ->with(['usuario'])
+                                ->get();
 
-        // Mismo PDF que ya descargas
-        $pdf = Pdf::loadView('pdf.reporte', compact(
-            'cotizaciones',
-            'fechaInicio',
-            'fechaFin'
-        ));
+        $pdf = Pdf::loadView('pdf.reporte', compact('cotizaciones', 'fechaInicio', 'fechaFin'));
 
         Mail::to($admin->correo)->send(
             new \App\Mail\ReporteMail($admin, $pdf->output())
         );
 
-        return back()->with('success', 'Reporte enviado a ' . $admin->correo);
+        return response()->json(['success' => true, 'mensaje' => 'Correo enviado a ' . $admin->correo]);
     }
 }

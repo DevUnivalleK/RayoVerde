@@ -23,6 +23,9 @@
                 <button id="btn-filtrar" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
                     <i class="fas fa-search"></i> Filtrar
                 </button>
+                <button id="btn-enviar-correo" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        <i class="fas fa-paper-plane"></i> Enviar correo
+                    </button>
                <!-- <button id="btn-excel" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                     <i class="fas fa-file-excel"></i> Excel
                 </button>
@@ -133,5 +136,54 @@ document.getElementById('fecha_fin').valueAsDate = hoy;
 
 document.getElementById('btn-filtrar').addEventListener('click', cargarReporte);
 cargarReporte();
+
+
+
+
+
+
+document.getElementById('btn-enviar-correo').addEventListener('click', function() {
+    const btn = this;
+    const fechaInicio = document.getElementById('fecha_inicio').value;
+    const fechaFin    = document.getElementById('fecha_fin').value;
+
+    // Feedback visual
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+    fetch('/admin/enviar-reporte', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                         || '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            fecha_inicio: fechaInicio,
+            fecha_fin:    fechaFin
+        })
+    })
+    .then(res => {
+        if (res.ok || res.redirected) {
+            btn.innerHTML = '<i class="fas fa-check"></i> ¡Enviado!';
+            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            btn.classList.add('bg-green-600');
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar correo';
+                btn.classList.remove('bg-green-600');
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }, 3000);
+        } else {
+            btn.innerHTML = '<i class="fas fa-times"></i> Error';
+            btn.classList.add('bg-red-600');
+            btn.disabled = false;
+        }
+    })
+    .catch(() => {
+        btn.innerHTML = '<i class="fas fa-times"></i> Error';
+        btn.disabled = false;
+    });
+});
 </script>
 @endsection
