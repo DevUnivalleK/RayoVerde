@@ -1,5 +1,7 @@
-@extends('layout')
-@section('title', 'Mi Carrito — Rayo Verde')
+@extends('layouts.user-sidebar')
+
+@section('title', 'Mi carrito')
+@section('breadcrumb', 'Mi carrito')
 
 @push('styles')
 <style>

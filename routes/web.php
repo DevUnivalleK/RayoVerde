@@ -82,6 +82,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/cotizaciones/historial', [CotizacionController::class, 'historial']);
     Route::get('/cotizaciones/{id}', [CotizacionController::class, 'show']);
     Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'generarPDF']);
+
+    Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'generarPDF']);
+    Route::get('/cotizaciones/{id}/excel', [CotizacionController::class, 'generarExcel']);
+    Route::post('/cotizaciones/{id}/enviar-correo', [CotizacionController::class, 'enviarCorreo'])
+     ->name('cotizaciones.enviarCorreo');
+     
 });
 
 /*
@@ -138,6 +144,8 @@ Route::middleware(['auth', 'es_admin'])->prefix('admin')->name('admin.')->group(
         Route::get('/filtrado-data', [ReporteController::class, 'reporteFiltrado']);
         Route::get('/metricas', [ReporteController::class, 'metricas']);
     });
+    Route::post('/enviar-reporte', [ReporteController::class, 'enviarReportePorCorreo'])
+    ->name('enviar.reporte');
 
     // Gestión de usuarios
         Route::get('/usuarios', [App\Http\Controllers\Admin\UsuarioController::class, 'index'])->name('usuarios.index');
