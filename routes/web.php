@@ -125,6 +125,7 @@ Route::middleware(['auth'])->prefix('ventas')->name('ventas.')->group(function (
         Route::get('/data', [CotizacionController::class, 'dataVentas'])->name('data');
         
         Route::post('/{id}/actualizar-estado', [CotizacionController::class, 'actualizarEstadoVentas'])->name('actualizarEstado');
+        Route::get('/{id}/detalle', [CotizacionController::class, 'obtenerDetalleVentas'])->name('detalle');
     });
 });
 

@@ -134,6 +134,27 @@ private function enviarAlAdmin(Cotizacion $cotizacion): void
             'message' => 'Estado actualizado por el módulo de ventas.'
         ]);
     }
+public function obtenerDetalleVentas($id)
+    {
+        $cotizacion = \App\Models\Cotizacion::findOrFail($id);
 
+        $detalles = \Illuminate\Support\Facades\DB::table('detalle_cotizaciones')
+            ->where('id_cotizacion', $id)
+            ->get();
+
+        foreach ($detalles as $detalle) {
+            $producto = \Illuminate\Support\Facades\DB::table('productos')
+                ->where('id_producto', $detalle->id_producto)
+                ->first();
+            
+            $detalle->producto = $producto ? ['nombre' => $producto->nombre] : ['nombre' => 'Producto #' . $detalle->id_producto];
+        }
+
+        return response()->json([
+            'success' => true,
+            'cotizacion' => $cotizacion,
+            'detalles' => $detalles
+        ]);
+    }
 
 }
