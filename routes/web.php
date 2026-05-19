@@ -14,6 +14,7 @@ use App\Http\Controllers\FaqController;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductoCatalogoController;
+use App\Http\Controllers\ChatVentasController;
 
 // Controladores de Administración
 use App\Http\Controllers\Admin\ProductoController;
@@ -60,6 +61,10 @@ Route::middleware('auth')->group(function () {
         return view('index'); 
     })->name('home');
 
+    Route::get('/chat/espera/{id}', [ChatVentasController::class, 'vistaEsperaCliente'])->name('chat.espera');
+    Route::post('/chat/enviar-cliente/{id}', [ChatVentasController::class, 'enviarMensajeCliente'])->name('chat.enviar.cliente');
+    Route::get('/chat/mensajes-cliente/{id}', [ChatVentasController::class, 'obtenerMensajesCliente'])->name('chat.mensajes.cliente');
+
     // Gestión de Carrito y Compras
     Route::prefix('cliente')->name('cliente.')->group(function () {
         Route::get('/catalogo', function () {
@@ -88,6 +93,40 @@ Route::middleware('auth')->group(function () {
     Route::post('/cotizaciones/{id}/enviar-correo', [CotizacionController::class, 'enviarCorreo'])
      ->name('cotizaciones.enviarCorreo');
      
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas Protegidas: PERSONAL DE VENTAS (Configuración de Pruebas en Vivo)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->prefix('ventas')->name('ventas.')->group(function () {
+
+    // 1. Dashboard Principal
+    Route::get('/', [ChatVentasController::class, 'dashboardPrincipal'])->name('dashboard');
+    
+    // 2. Módulo de Chat y Atención en Vivo
+    Route::prefix('chat')->name('chat.')->group(function () {
+        
+        Route::get('/bandeja', [ChatVentasController::class, 'bandeja'])->name('bandeja');
+        
+        Route::get('/derivaciones', [ChatVentasController::class, 'obtenerDerivaciones'])->name('derivaciones');
+        
+        //NUEVAS RUTAS: Consola de atención y carga asíncrona del Historial para el Agente
+        Route::get('/atender/{id}', [ChatVentasController::class, 'vistaAtenderAgente'])->name('atender');
+        Route::post('/enviar-agente/{id}', [ChatVentasController::class, 'enviarMensajeAgente'])->name('enviar.agente');
+        Route::get('/mensajes-agente/{id}', [ChatVentasController::class, 'obtenerMensajesAgente'])->name('mensajes.agente');
+    });
+
+    Route::prefix('cotizaciones')->name('cotizaciones.')->group(function () {
+        
+        Route::get('/', [CotizacionController::class, 'indexVentas'])->name('index');
+        
+        Route::get('/data', [CotizacionController::class, 'dataVentas'])->name('data');
+        
+        Route::post('/{id}/actualizar-estado', [CotizacionController::class, 'actualizarEstadoVentas'])->name('actualizarEstado');
+        Route::get('/{id}/detalle', [CotizacionController::class, 'obtenerDetalleVentas'])->name('detalle');
+    });
 });
 
 /*

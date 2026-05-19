@@ -93,7 +93,68 @@ private function enviarAlAdmin(Cotizacion $cotizacion): void
         }
     }
 
+/*
+    |--------------------------------------------------------------------------
+    | ADICIONES NUEVAS: MÓDULO DE PERSONAL DE VENTAS (MANTENER INTACTO LO ANTERIOR)
+    |--------------------------------------------------------------------------
+    */
 
+    public function indexVentas()
+    {
+        return view('PersonalVentas.cotizaciones');
+    }
 
+    public function dataVentas()
+{
+    $cotizaciones = \App\Models\Cotizacion::with(['usuario', 'estado'])
+                        ->orderBy('generado_en', 'desc')
+                        ->get();
+
+    $estadosReales = \App\Models\EstadoCotizacion::all();
+
+    return response()->json([
+        'success' => true,
+        'data' => $cotizaciones,
+        'estados_sistema' => $estadosReales 
+    ]);
+}
+
+    public function actualizarEstadoVentas(\Illuminate\Http\Request $request, $id)
+    {
+        $request->validate([
+            'id_estado' => 'required|integer'
+        ]);
+
+        $cotizacion = \App\Models\Cotizacion::findOrFail($id);
+        $cotizacion->id_estado = $request->id_estado;
+        $cotizacion->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Estado actualizado por el módulo de ventas.'
+        ]);
+    }
+public function obtenerDetalleVentas($id)
+    {
+        $cotizacion = \App\Models\Cotizacion::findOrFail($id);
+
+        $detalles = \Illuminate\Support\Facades\DB::table('detalle_cotizaciones')
+            ->where('id_cotizacion', $id)
+            ->get();
+
+        foreach ($detalles as $detalle) {
+            $producto = \Illuminate\Support\Facades\DB::table('productos')
+                ->where('id_producto', $detalle->id_producto)
+                ->first();
+            
+            $detalle->producto = $producto ? ['nombre' => $producto->nombre] : ['nombre' => 'Producto #' . $detalle->id_producto];
+        }
+
+        return response()->json([
+            'success' => true,
+            'cotizacion' => $cotizacion,
+            'detalles' => $detalles
+        ]);
+    }
 
 }
