@@ -33,6 +33,10 @@ class LoginController extends Controller
             if ($user->roles->contains('id_rol', 2)) {
                 return redirect()->route('admin.dashboard')->with('success', 'Bienvenido, Administrador.');
             }
+           if ($user->roles->contains('id_rol', 3)) { 
+               return redirect()->route('ventas.dashboard')->with('success', 'Bienvenido al Módulo de Ventas.');
+            }
+
 
             return redirect()->intended(route('home'))->with('success', 'Bienvenido de nuevo.');
         }

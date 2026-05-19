@@ -93,7 +93,47 @@ private function enviarAlAdmin(Cotizacion $cotizacion): void
         }
     }
 
+/*
+    |--------------------------------------------------------------------------
+    | ADICIONES NUEVAS: MÓDULO DE PERSONAL DE VENTAS (MANTENER INTACTO LO ANTERIOR)
+    |--------------------------------------------------------------------------
+    */
 
+    public function indexVentas()
+    {
+        return view('PersonalVentas.cotizaciones');
+    }
+
+    public function dataVentas()
+{
+    $cotizaciones = \App\Models\Cotizacion::with(['usuario', 'estado'])
+                        ->orderBy('generado_en', 'desc')
+                        ->get();
+
+    $estadosReales = \App\Models\EstadoCotizacion::all();
+
+    return response()->json([
+        'success' => true,
+        'data' => $cotizaciones,
+        'estados_sistema' => $estadosReales 
+    ]);
+}
+
+    public function actualizarEstadoVentas(\Illuminate\Http\Request $request, $id)
+    {
+        $request->validate([
+            'id_estado' => 'required|integer'
+        ]);
+
+        $cotizacion = \App\Models\Cotizacion::findOrFail($id);
+        $cotizacion->id_estado = $request->id_estado;
+        $cotizacion->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Estado actualizado por el módulo de ventas.'
+        ]);
+    }
 
 
 }

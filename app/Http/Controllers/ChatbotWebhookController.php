@@ -90,7 +90,10 @@ class ChatbotWebhookController extends Controller
                     $this->finalizarConversacion($idConversacion, 'DERIVADA');
                     $reply = ' Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.';
                     $this->registrarLog($idConversacion, 'bot', $reply);
-                    return response()->json(['reply' => $reply, 'redirect' => route('home')]);
+return response()->json([
+    'reply' => $reply, 
+    'redirect' => route('chat.espera', ['id' => $idConversacion])
+]);                    
                 }
                 break;
 
@@ -107,7 +110,10 @@ class ChatbotWebhookController extends Controller
                     $this->finalizarConversacion($idConversacion, 'DERIVADA');
                     $reply = 'Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.';
                     $this->registrarLog($idConversacion, 'bot', $reply);
-                    return response()->json(['reply' => $reply, 'redirect' => route('home')]);
+                    return response()->json([
+    'reply' => $reply, 
+    'redirect' => route('chat.espera', ['id' => $idConversacion])
+]);
                 } else {
                     $nuevoEstado = 'ESPERANDO_FAQ';
                 }
@@ -120,7 +126,10 @@ class ChatbotWebhookController extends Controller
                     $this->finalizarConversacion($idConversacion, 'DERIVADA');
                     $reply = 'Redirigiendo con un asesor...';
                     $this->registrarLog($idConversacion, 'bot', $reply);
-                    return response()->json(['reply' => $reply, 'redirect' => route('home')]);
+                    return response()->json([
+    'reply' => $reply, 
+    'redirect' => route('chat.espera', ['id' => $idConversacion])
+]);
                 } else {
                     $nuevoEstado = 'INICIO';
                 }
