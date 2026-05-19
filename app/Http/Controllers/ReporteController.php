@@ -214,6 +214,6 @@ class ReporteController extends Controller
             new \App\Mail\ReporteMail($admin, $pdf->output())
         );
 
-        return response()->json(['success' => true, 'mensaje' => 'Correo enviado a ' . $admin->correo]);
+        return back();
     }
 }

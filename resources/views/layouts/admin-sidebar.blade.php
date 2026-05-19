@@ -151,6 +151,17 @@
     <a href="{{ route('admin.reportes.exportar.pdf') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
         <i class="fas fa-file-pdf ni" style="font-size:0.68rem; color:#ef4444;"></i><span>PDF</span>
     </a>
+            {{-- Enviar reporte por correo --}}
+    <form method="POST" action="{{ route('admin.enviar.reporte') }}">
+        @csrf
+        <button type="submit"
+                class="nav-item w-full text-left"
+                style="font-size:0.77rem; padding:6px 10px;"
+                onclick="this.disabled=true; this.innerHTML='<i class=\'fas fa-spinner fa-spin ni\' style=\'font-size:0.68rem;\'></i><span> Enviando...</span>'; this.closest(\'form\').submit();">
+            <i class="fas fa-paper-plane ni" style="font-size:0.68rem; color:#60a5fa;"></i>
+            <span>Enviar correo</span>
+        </button>
+    </form>
 </div>
 
         <p class="slabel">Configuración</p>
@@ -162,17 +173,6 @@
         <!--<a href="{{ route('chatbot.index') }}" class="nav-item">
            <i class="fas fa-robot ni"></i><span>ChatBot</span>
         </a>-->
-        {{-- Enviar reporte por correo --}}
-<form method="POST" action="{{ route('admin.enviar.reporte') }}">
-    @csrf
-    <button type="submit"
-            class="nav-item w-full text-left"
-            style="border:1px solid rgba(76,175,80,0.2); margin-top:4px; background:rgba(76,175,80,0.05);"
-            onclick="this.disabled=true; this.innerHTML='<i class=\'fas fa-spinner fa-spin ni\'></i><span style=\'color:#7dcba8;\'>Enviando...</span>'; this.closest(\'form\').submit();">
-        <i class="fas fa-paper-plane ni" style="color:#4CAF50; opacity:1;"></i>
-        <span style="color:#7dcba8;">Enviar reporte al correo</span>
-    </button>
-</form>
         <hr class="sdiv">
 
         <a href="{{ route('home') }}" target="_blank" class="nav-item"
