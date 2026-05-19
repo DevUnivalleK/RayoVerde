@@ -30,7 +30,7 @@
     </script>
 
     @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/slidebarAdmin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/sidebarAdmin.css') }}">
     @endpush
 
     @stack('styles')
@@ -90,10 +90,11 @@
             </a>
         </div>
 
+        <!--
         {{-- Envíos/Regiones --}}
         <a href="#" class="nav-item">
             <i class="fas fa-truck ni"></i><span>Envíos / Regiones</span>
-        </a>
+        </a>-->
 
         {{-- Gestión de Ventas --}}
         <button onclick="toggleSubmenu('sub-ventas',this)" class="nav-item">
@@ -150,18 +151,33 @@
     <a href="{{ route('admin.reportes.exportar.pdf') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
         <i class="fas fa-file-pdf ni" style="font-size:0.68rem; color:#ef4444;"></i><span>PDF</span>
     </a>
+            {{-- Enviar reporte por correo --}}
+    <form method="POST" action="{{ route('admin.enviar.reporte') }}">
+        @csrf
+        <button type="submit"
+                class="nav-item w-full text-left"
+                style="font-size:0.77rem; padding:6px 10px;"
+                onclick="this.disabled=true; this.innerHTML='<i class=\'fas fa-spinner fa-spin ni\' style=\'font-size:0.68rem;\'></i><span> Enviando...</span>'; this.closest(\'form\').submit();">
+            <i class="fas fa-paper-plane ni" style="font-size:0.68rem; color:#60a5fa;"></i>
+            <span>Enviar correo</span>
+        </button>
+    </form>
 </div>
 
         <p class="slabel">Configuración</p>
+
+
+        <a href="{{ route('admin.usuarios.index') }}" class="nav-item">
+            <i class="fas fa-users ni"></i><span>Gestión de Usuarios</span>
+        </a>
 
         <a href="#" class="nav-item">
             <i class="fas fa-sliders-h ni"></i><span>Config. Comercial</span>
         </a>
 
-        <a href="{{ route('chatbot.index') }}" class="nav-item">
-            <i class="fas fa-robot ni"></i><span>ChatBot</span>
-        </a>
-
+        <!--<a href="{{ route('chatbot.index') }}" class="nav-item">
+           <i class="fas fa-robot ni"></i><span>ChatBot</span>
+        </a>-->
         <hr class="sdiv">
 
         <a href="{{ route('home') }}" target="_blank" class="nav-item"

@@ -22,224 +22,9 @@
         }
     </script>
 
-    <style>
-        /* ══════════════════════════════
-           PALETA USUARIO
-           Sidebar: verde bosque oscuro
-           #0e2a10 → #132e14 → #183818
-           Acento:  #4CAF50 / #6fcf6f
-           Fondo:   #eef2eb
-        ══════════════════════════════ */
-
-        /* ── Scrollbar sidebar ── */
-        #sidebar-nav::-webkit-scrollbar       { width: 3px; }
-        #sidebar-nav::-webkit-scrollbar-track { background: transparent; }
-        #sidebar-nav::-webkit-scrollbar-thumb { background: #4CAF50; border-radius: 99px; }
-
-        /* ── Scrollbar global ── */
-        ::-webkit-scrollbar       { width: 6px; }
-        ::-webkit-scrollbar-track { background: #eef4ea; }
-        ::-webkit-scrollbar-thumb { background: #4CAF50; border-radius: 99px; }
-
-        /* ── Base ── */
-        body { background: #eef2eb; font-family: 'DM Sans', sans-serif; color: #1d2b1a; }
-
-        /* ══════════════════════════════
-           SIDEBAR — verde bosque oscuro
-           Diferente al admin (#0D1F03 casi negro)
-           Aquí es un verde profundo reconocible
-        ══════════════════════════════ */
-        #sidebar {
-            width: 224px;
-            background: linear-gradient(180deg,
-                #0e2a10 0%,
-                #132e14 40%,
-                #183818 100%
-            );
-            border-right: 1px solid rgba(111,255,111,0.07);
-            box-shadow: 5px 0 22px rgba(0,0,0,0.28);
-            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
-        }
-        @media (max-width: 1023px) {
-            #sidebar.sidebar-hidden { transform: translateX(-100%); }
-        }
-
-        /* ── Logo area ── */
-        .sidebar-brand {
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.02);
-        }
-
-        /* ── Badge verde "cliente" en logo ── */
-        .brand-badge {
-            font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
-            font-weight: 700; color: #4CAF50;
-            background: rgba(76,175,80,0.12);
-            border: 1px solid rgba(76,175,80,0.25);
-            border-radius: 99px; padding: 1px 7px;
-            display: inline-block; margin-top: 3px;
-        }
-
-        /* ── Nav items ── */
-        .nav-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 9px 12px; border-radius: 12px;
-            font-size: 0.84rem; font-weight: 500;
-            color: #9fbf9a;
-            text-decoration: none; cursor: pointer; width: 100%;
-            transition: background 0.18s ease, color 0.18s ease,
-                        transform 0.18s ease;
-        }
-        .nav-item .ni {
-            width: 16px; text-align: center; font-size: 0.76rem;
-            opacity: 0.6; flex-shrink: 0;
-            transition: opacity 0.18s ease;
-        }
-        .nav-item:hover {
-            background: rgba(76,175,80,0.13);
-            color: #dfffdc;
-            transform: translateX(2px);
-        }
-        .nav-item:hover .ni { opacity: 1; }
-
-        /* Activo — acento verde brillante, diferente al admin
-           (admin usa gradiente más azulado/oscuro)  */
-        .nav-item.active {
-            background: linear-gradient(135deg,
-                #1e6b2e 0%,
-                #27ae60 50%,
-                #4CAF50 100%
-            );
-            color: #ffffff;
-            box-shadow: 0 4px 16px rgba(76,175,80,0.32),
-                        inset 0 1px 0 rgba(255,255,255,0.12);
-        }
-        .nav-item.active .ni { opacity: 1; color: #fff; }
-
-        /* ── Section labels ── */
-        .slabel {
-            font-size: 0.57rem; letter-spacing: 0.14em; text-transform: uppercase;
-            color: #3d6040; font-weight: 700; padding: 13px 11px 4px;
-        }
-
-        /* ── Divider ── */
-        .sdiv { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 7px 0; }
-
-        /* ── Submenu ── */
-        .submenu { overflow: hidden; max-height: 0; transition: max-height 0.28s ease; }
-        .submenu.open { max-height: 400px; }
-        .s-arrow { transition: transform 0.22s ease; font-size: 0.55rem !important; opacity: 0.4; }
-
-        /* ── Carrito badge sidebar ── */
-        .cart-badge {
-            background: #4CAF50; color: #fff;
-            font-size: 0.56rem; font-weight: 700;
-            min-width: 16px; height: 16px; border-radius: 99px;
-            display: flex; align-items: center; justify-content: center; padding: 0 4px;
-        }
-
-        /* ── Perfil bottom ── */
-        .sidebar-bottom {
-            border-top: 1px solid rgba(255,255,255,0.05);
-            background: #0a1f0c;
-        }
-
-        /* ══════════════════════════════
-           HEADER
-        ══════════════════════════════ */
-        .user-header {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #d4edda;
-            box-shadow: 0 2px 0 rgba(39,174,96,0.07),
-                        0 6px 20px rgba(0,0,0,0.05);
-        }
-
-        /* Franja superior — más verde que el admin para distinguirse */
-        .top-stripe {
-            height: 3px;
-            background: linear-gradient(90deg,
-                #0e2a10 0%,
-                #27ae60 45%,
-                #4CAF50 72%,
-                #7BE07B 100%
-            );
-        }
-
-        /* ── Search ── */
-        .search-box {
-            display: flex; align-items: center; gap: 7px;
-            background: #f5fbf2; border: 1px solid #c3e6cb;
-            border-radius: 12px; padding: 7px 13px;
-            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-        }
-        .search-box:focus-within {
-            background: #fff; border-color: #4CAF50;
-            box-shadow: 0 0 0 4px rgba(76,175,80,0.1);
-        }
-        .search-box input {
-            background: transparent; outline: none; border: none;
-            font-size: 0.82rem; color: #1d2b1a; width: 150px;
-        }
-        .search-box input::placeholder { color: #7dcba8; }
-
-        /* ── Header icon buttons ── */
-        .hbtn {
-            position: relative;
-            width: 34px; height: 34px; border-radius: 11px;
-            display: flex; align-items: center; justify-content: center;
-            background: #f5fbf2; border: 1px solid #c3e6cb;
-            cursor: pointer; flex-shrink: 0; text-decoration: none;
-            transition: background 0.18s, border-color 0.18s,
-                        box-shadow 0.18s, transform 0.18s;
-        }
-        .hbtn:hover {
-            background: #e0f2e8; border-color: #27ae60;
-            box-shadow: 0 4px 14px rgba(39,174,96,0.18);
-            transform: translateY(-1px);
-        }
-        .hbtn i   { font-size: 0.82rem; color: #3a7a50; }
-        .hbtn img { width: 16px; height: 16px; object-fit: contain; opacity: 0.72; }
-        .hbtn:hover img { opacity: 1; }
-        .hbtn:hover i { color: #1a5c30; }
-
-        /* ── User pill ── */
-        .u-pill {
-            display: flex; align-items: center; gap: 7px;
-            background: linear-gradient(135deg, #f5fff2, #e5f5df);
-            border: 1px solid #c3e6cb; border-radius: 50px;
-            padding: 4px 11px 4px 5px; cursor: pointer;
-            transition: box-shadow 0.2s, transform 0.2s;
-        }
-        .u-pill:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(39,174,96,0.18);
-        }
-
-        /* ── Badge pulse ── */
-        @keyframes badge-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
-        .bp { animation: badge-pulse 2s infinite; }
-
-        /* ── Dropdowns ── */
-        .dropdown-panel {
-            background: rgba(255,255,255,0.98);
-            border: 1px solid #d4edda; border-radius: 18px;
-            box-shadow: 0 10px 34px rgba(0,0,0,0.11);
-            backdrop-filter: blur(12px);
-        }
-
-        /* ── Overlay ── */
-        #sidebar-overlay { transition: opacity 0.28s; backdrop-filter: blur(2px); }
-
-        /* ══════════════════════════════
-           FOOTER
-        ══════════════════════════════ */
-        .user-footer {
-            background: linear-gradient(180deg, #0e2a10 0%, #0a1c0c 100%);
-            border-top: 1px solid rgba(76,175,80,0.12);
-            box-shadow: 0 -5px 24px rgba(0,0,0,0.2);
-        }
-    </style>
+    @push('styles')
+    <link rel="stylesheet" href="{{ asset('css/sidebarUser.css') }}">
+    @endpush
 
     @stack('styles')
 </head>
@@ -284,7 +69,7 @@
             <i class="fas fa-home ni"></i><span>Inicio</span>
         </a>
 
-        <a href="{{ route('catalogo.index') }}" class="nav-item">
+        <a href="{{ route('cliente.catalogo') }}" class="nav-item">
             <i class="fas fa-leaf ni"></i><span>Catálogo de Aceites</span>
         </a>
 
@@ -304,7 +89,7 @@
             <i class="fas fa-credit-card ni"></i><span>Checkout</span>
         </a>
 
-        {{-- Mis Pedidos --}}
+       <!-- {{-- Mis Pedidos --}}
         <button onclick="toggleSubmenu('sub-pedidos',this)" class="nav-item">
             <i class="fas fa-box ni"></i>
             <span class="flex-1 text-left">Mis Pedidos</span>
@@ -317,7 +102,7 @@
             <a href="#" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
                 <i class="fas fa-check-circle ni" style="font-size:0.68rem;"></i><span>Completados</span>
             </a>
-        </div>
+        </div>-->
 
         <a href="{{ url('/mis-cotizaciones') }}" class="nav-item">
             <i class="fas fa-file-invoice-dollar ni"></i><span>Mis Cotizaciones</span>
@@ -331,9 +116,9 @@
             <i class="fas fa-robot ni"></i><span>ChatBot</span>
         </a>
 
-        <a href="#" class="nav-item">
+        <!-- <a href="#" class="nav-item">
             <i class="fas fa-question-circle ni"></i><span>Ayuda / FAQ</span>
-        </a>
+        </a> -->
 
         <hr class="sdiv">
 

@@ -705,6 +705,32 @@ tbody td.muted { color: var(--ink-muted); font-size: 12px; font-weight: 300; }
 }
 .btn-excel:hover { background: var(--green-700); color: #fff; }
 
+
+/* ─── Variantes de botón para gestión de usuarios ───────────── */
+.btn-warning {
+    background: var(--amber-500); color: #fff;
+}
+.btn-warning:hover {
+    background: var(--amber-700); transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(99,56,6,0.25);
+}
+
+.btn-danger {
+    background: var(--error); color: #fff;
+}
+.btn-danger:hover {
+    background: #a93226; transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(192,57,43,0.25);
+}
+
+.btn-blue {
+    background: var(--blue-700); color: #fff; 
+}
+.btn-blue:hover {
+    background: #145880; transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(24,95,165,0.25);
+}
+
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
     .rv-stats   { grid-template-columns: repeat(2, 1fr); }
