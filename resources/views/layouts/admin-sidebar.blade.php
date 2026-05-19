@@ -30,7 +30,7 @@
     </script>
 
     @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/slidebarAdmin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/sidebarAdmin.css') }}">
     @endpush
 
     @stack('styles')
