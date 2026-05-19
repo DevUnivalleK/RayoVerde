@@ -58,4 +58,42 @@ public function generarExcel($id)
     
     return Excel::download(new CotizacionExport($cotizacion), "cotizacion_{$cotizacion->codigo}.xlsx");
 }
+
+
+
+public function enviarCorreo($id)
+    {
+        $cotizacion = Cotizacion::with(['detalles.producto', 'usuario', 'estado'])
+                                ->findOrFail($id);
+
+        try {
+            $this->enviarAlAdmin($cotizacion);
+            return back()->with('success', 'Correo enviado al administrador correctamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'No se pudo enviar el correo: ' . $e->getMessage());
+        }
+    }
+
+private function enviarAlAdmin(Cotizacion $cotizacion): void
+    {
+        // Primero busca por tabla usuario_roles
+        $admin = Usuario::whereHas('roles', function ($q) {
+            $q->whereIn('nombre', ['admin', 'administrador', 'Administrador', 'Admin']);
+        })->first();
+
+        // Fallback: busca por campo rol directo en usuarios
+        if (!$admin) {
+            $admin = Usuario::where('rol', 'admin')
+                            ->orWhere('rol', 'administrador')
+                            ->first();
+        }
+
+        if ($admin && $admin->correo) {
+            Mail::to($admin->correo)->send(new CotizacionMail($cotizacion));
+        }
+    }
+
+
+
+
 }
