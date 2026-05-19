@@ -184,11 +184,14 @@
             <p style="font-size:0.77rem; font-weight:600; color:#c8e6c8;">{{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</p>
             <p style="font-size:0.63rem; color:#58744f;" class="truncate">{{ Auth::user()->correo }}</p>
         </div>
-        <a href="{{ url('/login') }}" title="Cerrar sesión"
-           style="color:#58744f;" class="flex-shrink-0 transition-colors"
-           onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#58744f'">
+        <a href="#" onclick="document.getElementById('form-logout').submit(); return false;"
+           title="Cerrar sesión" style="color:#3d6040;" class="flex-shrink-0 transition-colors"
+           onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#3d6040'">
             <i class="fas fa-sign-out-alt text-sm"></i>
         </a>
+         <form id="form-logout" action="{{ route('logout') }}" method="POST" style="display:none;">
+            @csrf
+        </form>
     </div>
 
 </aside>
@@ -363,7 +366,7 @@
                             <i class="fas fa-globe w-4 text-center" style="color:#4CAF50;"></i>Ver sitio
                         </a>
                         <div style="border-top:1px solid #eef4ea; padding-top:3px; margin-top:3px;">
-                            <a href="{{ url('/login') }}"
+                            <a href="#" onclick="document.getElementById('form-logout').submit(); return false;"
                                class="flex items-center gap-3 px-4 py-2 hover:bg-red-50 transition-colors font-semibold"
                                style="font-size:0.82rem; color:#ef4444;">
                                 <i class="fas fa-sign-out-alt w-4 text-center"></i>Cerrar Sesión
