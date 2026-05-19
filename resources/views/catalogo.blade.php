@@ -1,4 +1,4 @@
-@extends('layouts.user-sidebar')
+@extends('layout')
 
 @section('title', 'Catálogo')
 @section('breadcrumb', 'Catalogo')
