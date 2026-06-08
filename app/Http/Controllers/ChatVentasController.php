@@ -8,28 +8,23 @@ use Carbon\Carbon;
 
 class ChatVentasController extends Controller
 {
-    /**
-     * Carga el Dashboard Principal con las métricas dinámicas de Rayo Verde
-     */
+    // --- DASHBOARD Y BANDEJA ---
+
     public function dashboardPrincipal()
     {
-        // 1. Contar chats en espera (Derivados a agente activos hoy)
         $chatsEnEspera = DB::table('conversaciones_chatbot')
             ->where('derivada_a_agente', true)
             ->where('estado', 'DERIVADA')
             ->count();
 
-        // 2. Contar cotizaciones activas (En estado Pendiente = 1)
         $cotizacionesActivas = DB::table('cotizaciones')
             ->where('id_estado', 1)
             ->count();
 
-        // 3. Atendidos Hoy (Conversaciones cuya finalización se registró hoy)
         $atendidosHoy = DB::table('conversaciones_chatbot')
             ->whereDate('finalizada_en', Carbon::today())
             ->count();
 
-        // 4. Traer las últimas 5 solicitudes de chat derivadas para la vista rápida
         $chatsPendientes = DB::table('conversaciones_chatbot as c')
             ->join('usuarios as u', 'c.id_usuario', '=', 'u.id_usuario')
             ->select(
@@ -44,25 +39,14 @@ class ChatVentasController extends Controller
             ->take(5)
             ->get();
 
-        return view('PersonalVentas.dashboard', compact(
-            'chatsEnEspera', 
-            'cotizacionesActivas', 
-            'atendidosHoy', 
-            'chatsPendientes'
-        ));
+        return view('PersonalVentas.dashboard', compact('chatsEnEspera', 'cotizacionesActivas', 'atendidosHoy', 'chatsPendientes'));
     }
 
-    /**
-     * Carga la vista Blade de la bandeja de entrada para el personal de ventas
-     */
     public function bandeja()
     {
         return view('PersonalVentas.bandeja-chats');
     }
 
-    /**
-     * Retorna el JSON de todas las solicitudes derivadas para el fetch asíncrono de la bandeja
-     */
     public function obtenerDerivaciones()
     {
         $derivaciones = DB::table('conversaciones_chatbot as c')
@@ -78,14 +62,11 @@ class ChatVentasController extends Controller
             ->orderBy('c.iniciada_en', 'desc')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $derivaciones
-        ]);
+        return response()->json(['success' => true, 'data' => $derivaciones]);
     }
 
-
     // --- FLUJO DEL CLIENTE ---
+
     public function vistaEsperaCliente($id)
     {
         $conversacion = DB::table('conversaciones_chatbot')->where('id_conversacion', $id)->first();
@@ -94,10 +75,9 @@ class ChatVentasController extends Controller
 
     public function obtenerMensajesCliente($id)
     {
-        // El cliente solo lee lo que él escribió o lo que le responde el agente humano (oculta al bot)
         $mensajes = DB::table('mensajes_chatbot')
             ->where('id_conversacion', $id)
-            ->whereIn('emisor', ['usuario', 'agente'])
+            ->whereIn('emisor', ['usuario', 'agente', 'sistema'])
             ->orderBy('enviado_en', 'asc')
             ->get();
 
@@ -108,14 +88,15 @@ class ChatVentasController extends Controller
     {
         DB::table('mensajes_chatbot')->insert([
             'id_conversacion' => $id,
-            'emisor' => 'usuario',
-            'contenido' => $request->message,
-            'enviado_en' => now()
+            'emisor'          => 'usuario',
+            'contenido'       => $request->message,
+            'enviado_en'      => now()
         ]);
         return response()->json(['success' => true]);
     }
 
     // --- FLUJO DEL PERSONAL DE VENTAS ---
+
     public function vistaAtenderAgente($id)
     {
         $conversacion = DB::table('conversaciones_chatbot as c')
@@ -127,32 +108,40 @@ class ChatVentasController extends Controller
         return view('PersonalVentas.chat-atender', compact('conversacion'));
     }
 
-    
-public function obtenerMensajesAgente($id)
-{
-    $mensajes = DB::table('mensajes_chatbot')
-        ->where('id_conversacion', $id)
-        ->orderBy('enviado_en', 'asc')
-        ->get();
+    public function obtenerMensajesAgente($id)
+    {
+        $mensajes = DB::table('mensajes_chatbot')
+            ->where('id_conversacion', $id)
+            ->orderBy('enviado_en', 'asc')
+            ->get();
 
-    return response()->json([
-        'success' => true,
-        'data' => $mensajes
-    ]);
-}
-
+        return response()->json(['success' => true, 'data' => $mensajes]);
+    }
 
     public function enviarMensajeAgente(Request $request, $id)
     {
         DB::table('mensajes_chatbot')->insert([
             'id_conversacion' => $id,
-            'emisor' => 'agente',
-            'contenido' => $request->message,
-            'enviado_en' => now()
+            'emisor'          => 'agente',
+            'contenido'       => $request->contenido,
+            'enviado_en'      => now()
         ]);
         return response()->json(['success' => true]);
     }
-    
 
-    
+    public function finalizarChatAgente($id)
+    {
+
+        DB::table('conversaciones_chatbot')
+        ->where('id_conversacion', $id)
+        ->update([
+            'derivada_a_agente' => false,
+            'estado'            => 'FINALIZADA', 
+            'finalizada_en'     => now()
+        ]);
+       
+        return response()->json(['success' => true]);
+    }
+
+   
 }

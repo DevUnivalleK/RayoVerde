@@ -7,9 +7,6 @@ use Illuminate\Support\Facades\DB;
 
 class ChatbotWebhookController extends Controller
 {
-    /**
-     * Registra el historial de mensajes en la tabla mensajes_chatbot
-     */
     private function registrarLog($idConv, $emisor, $texto) {
         DB::table('mensajes_chatbot')->insert([
             'id_conversacion' => $idConv,
@@ -19,9 +16,6 @@ class ChatbotWebhookController extends Controller
         ]);
     }
 
-    /**
-     * Actualiza el estado final de la conversación en conversaciones_chatbot
-     */
     private function finalizarConversacion($id, $estado) {
         if (!$id) return;
         
@@ -40,8 +34,12 @@ class ChatbotWebhookController extends Controller
         $userMessage = str_replace(',', '.', $rawMessage);
         $idConversacion = $request->json('id_conversacion');
 
-        // 1. Inicialización
-        if (!$idConversacion || $idConversacion == "null") {
+        $conversacion = null;
+        if ($idConversacion && $idConversacion != "null") {
+            $conversacion = DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->first();
+        }
+
+        if (!$conversacion || $conversacion->estado != 'ACTIVA') {
             $idConversacion = DB::table('conversaciones_chatbot')->insertGetId([
                 'id_usuario'  => auth()->id(),
                 'paso_actual' => 'INICIO',
@@ -49,21 +47,16 @@ class ChatbotWebhookController extends Controller
                 'iniciada_en' => now()
             ], 'id_conversacion');
             session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
+            $conversacion = DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->first();
         }
 
-        // [LOG] Guardar mensaje del usuario
         $this->registrarLog($idConversacion, 'usuario', $userMessage);
-
-        $conversacion = DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->first();
         $estadoActual = $conversacion->paso_actual;
 
-        // 2. Comandos de Reinicio y Abandono
         if (in_array(strtolower($userMessage), ['hola', 'menu', 'inicio', 'volver'])) {
-            // Si abandona un flujo activo para ir al inicio, sellamos la actual como ABANDONADA
             if ($estadoActual != 'INICIO' && $conversacion->estado == 'ACTIVA') {
                 $this->finalizarConversacion($idConversacion, 'ABANDONADA');
                 
-                // Generamos nueva conversación para el nuevo inicio
                 $idConversacion = DB::table('conversaciones_chatbot')->insertGetId([
                     'id_usuario'  => auth()->id(),
                     'paso_actual' => 'INICIO',
@@ -78,22 +71,22 @@ class ChatbotWebhookController extends Controller
         $nuevoEstado = $estadoActual;
         $reply = null;
 
-        // 3. Máquina de Estados
         switch ($estadoActual) {
             case 'INICIO':
             case 'ESPERANDO_MENU':
                 if ($userMessage == '1') {
+                    session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
                     $nuevoEstado = 'SOLICITAR_PRODUCTO';
                 } elseif ($userMessage == '2') {
                     $nuevoEstado = 'ESPERANDO_FAQ';
                 } elseif ($userMessage == '3') {
                     $this->finalizarConversacion($idConversacion, 'DERIVADA');
-                    $reply = ' Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.';
+                    $reply = 'Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.';
                     $this->registrarLog($idConversacion, 'bot', $reply);
-return response()->json([
-    'reply' => $reply, 
-    'redirect' => route('chat.espera', ['id' => $idConversacion])
-]);                    
+                    return response()->json([
+                        'reply' => $reply, 
+                        'redirect' => route('chat.espera', ['id' => $idConversacion])
+                    ]);                    
                 }
                 break;
 
@@ -111,9 +104,9 @@ return response()->json([
                     $reply = 'Redirigiendo con un asesor de Rayo Verde... Por favor, espera un momento.';
                     $this->registrarLog($idConversacion, 'bot', $reply);
                     return response()->json([
-    'reply' => $reply, 
-    'redirect' => route('chat.espera', ['id' => $idConversacion])
-]);
+                        'reply' => $reply, 
+                        'redirect' => route('chat.espera', ['id' => $idConversacion])
+                    ]);
                 } else {
                     $nuevoEstado = 'ESPERANDO_FAQ';
                 }
@@ -127,9 +120,9 @@ return response()->json([
                     $reply = 'Redirigiendo con un asesor...';
                     $this->registrarLog($idConversacion, 'bot', $reply);
                     return response()->json([
-    'reply' => $reply, 
-    'redirect' => route('chat.espera', ['id' => $idConversacion])
-]);
+                        'reply' => $reply, 
+                        'redirect' => route('chat.espera', ['id' => $idConversacion])
+                    ]);
                 } else {
                     $nuevoEstado = 'INICIO';
                 }
@@ -168,9 +161,17 @@ return response()->json([
                 if ($userEnLitros < ($baseEnLitros - 0.0001)) {
                     $nuevoEstado = 'ERROR_CANTIDAD_MINIMA';
                     $msgMinimo = ($uniBase == 'ml') ? "{$valBase}ml" : "{$valBase}L";
-                    $reply = "Cantidad insuficiente. El mínimo para este producto es de *{$msgMinimo}*.\n\n" .
-                             "Tu ingreso: {$cantUser}{$uniUser}\n\n" .
-                             "¿Qué deseas hacer?\n1. Intentar con otra cantidad (Ej: 1.5 o 500)\n2. Cancelar y volver al menú";
+                    
+                    $carrito = session('carrito_chatbot', []);
+                    if (empty($carrito)) {
+                        $reply = "Cantidad insuficiente. El mínimo para este producto es de *{$msgMinimo}*.\n\n" .
+                                 "Tu ingreso: {$cantUser}{$uniUser}\n\n" .
+                                 "¿Qué deseas hacer?\n1. Intentar con otra cantidad\n2. Cancelar y volver al menú principal";
+                    } else {
+                        $reply = "Cantidad insuficiente. El mínimo para este producto es de *{$msgMinimo}*.\n\n" .
+                                 "Tu ingreso: {$cantUser}{$uniUser}\n\n" .
+                                 "¿Qué deseas hacer?\n1. Intentar con otra cantidad\n2. Descartar este producto y ver resumen\n3. Cancelar toda la cotización";
+                    }
                     
                     $this->registrarLog($idConversacion, 'bot', $reply);
                     DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->update(['paso_actual' => $nuevoEstado]);
@@ -188,11 +189,30 @@ return response()->json([
                 break;
 
             case 'ERROR_CANTIDAD_MINIMA':
+                $carrito = session('carrito_chatbot', []);
+                
                 if ($userMessage == '1') {
                     $nuevoEstado = 'SOLICITAR_CANTIDAD';
-                } else {
+                } elseif ($userMessage == '2') {
                     session()->forget(['temp_prod', 'temp_unidad']);
-                    $nuevoEstado = 'INICIO';
+                    if (!empty($carrito)) {
+                        $nuevoEstado = 'MOSTRAR_RESUMEN';
+                    } else {
+                        $this->finalizarConversacion($idConversacion, 'ABANDONADA');
+                        $reply = "❌ Cotización cancelada correctamente. Volviendo al menú principal...\n\n" .
+                                 "¡Hola! Soy el asistente de Rayo Verde. Selecciona una opción:\n1. Nueva Cotización\n2. Preguntas Frecuentes\n3. Hablar con un Asesor";
+                        $this->registrarLog($idConversacion, 'bot', $reply);
+                        return response()->json(['reply' => $reply, 'id_conversacion' => $idConversacion]);
+                    }
+                } elseif ($userMessage == '3' && !empty($carrito)) {
+                    session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
+                    $this->finalizarConversacion($idConversacion, 'ABANDONADA');
+                    $reply = "❌ Cotización cancelada correctamente. Volviendo al menú principal...\n\n" .
+                             "¡Hola! Soy el asistente de Rayo Verde. Selecciona una opción:\n1. Nueva Cotización\n2. Preguntas Frecuentes\n3. Hablar con un Asesor";
+                    $this->registrarLog($idConversacion, 'bot', $reply);
+                    return response()->json(['reply' => $reply, 'id_conversacion' => $idConversacion]);
+                } else {
+                    $nuevoEstado = 'ERROR_CANTIDAD_MINIMA';
                 }
                 break;
 
@@ -201,14 +221,20 @@ return response()->json([
                 break;
 
             case 'MOSTRAR_RESUMEN':
-                if ($userMessage == '1') return $this->finalizarCotizacion($idConversacion);
+                if ($userMessage == '1') {
+                    return $this->finalizarCotizacion($idConversacion);
+                }
+                
                 $this->finalizarConversacion($idConversacion, 'ABANDONADA');
                 session()->forget(['carrito_chatbot', 'temp_prod', 'temp_unidad']);
-                $nuevoEstado = 'INICIO';
-                break;
+                
+                $reply = "Cotización cancelada correctamente. Volviendo al menú principal...\n\n" .
+                         "¡Hola! Soy el asistente de Rayo Verde. Selecciona una opción:\n1. Nueva Cotización\n2. Preguntas Frecuentes\n3. Hablar con un Asesor";
+                
+                $this->registrarLog($idConversacion, 'bot', $reply);
+                return response()->json(['reply' => $reply, 'id_conversacion' => $idConversacion]);
         }
 
-        // 4. Generación de Respuesta Final
         DB::table('conversaciones_chatbot')->where('id_conversacion', $idConversacion)->update(['paso_actual' => $nuevoEstado]);
         
         if (!$reply) {
@@ -226,6 +252,29 @@ return response()->json([
                 $reply = "Selecciona un producto:\n";
                 foreach ($prods as $i => $p) $reply .= ($i + 1) . ". " . $p->nombre . " (Bs. " . $p->precio . ")\n";
             } 
+            elseif ($nuevoEstado == 'SOLICITAR_UNIDAD') {
+                $reply = "¿En que unidad deseas cotizar?\n1. Mililitros (ml)\n2. Litros (L)";
+            }
+            elseif ($nuevoEstado == 'SOLICITAR_CANTIDAD') {
+                $uni = session('temp_unidad');
+                $reply = "Indica la cantidad en " . $uni . ":\n(Ej: " . ($uni == 'L' ? "1.5" : "250") . ")";
+            }
+            elseif ($nuevoEstado == 'PREGUNTAR_BUCLE') {
+                $reply = "¿Deseas añadir otro producto?\n1. Si, añadir otro\n2. No, finalizar y ver resumen";
+            }
+            elseif ($nuevoEstado == 'ERROR_CANTIDAD_MINIMA') {
+                $prodTemp = session('temp_prod');
+                preg_match('/(\d+(?:\.\d+)?)\s*(ml|L|l)/i', $prodTemp['nombre'] ?? '', $matches);
+                $valBase = isset($matches[1]) ? (float)$matches[1] : 1;
+                $uniBase = isset($matches[2]) ? strtolower($matches[2]) : 'ml';
+                $msgMinimo = ($uniBase == 'ml') ? "{$valBase}ml" : "{$valBase}L";
+                
+                if (empty(session('carrito_chatbot', []))) {
+                    $reply = "Opción no válida. El mínimo para este producto es de *{$msgMinimo}*.\n\n¿Qué deseas hacer?\n1. Intentar con otra cantidad\n2. Cancelar y volver al menú principal";
+                } else {
+                    $reply = "Opción no válida. El mínimo para este producto es de *{$msgMinimo}*.\n\n¿Qué deseas hacer?\n1. Intentar con otra cantidad\n2. Descartar este producto y ver resumen\n3. Cancelar toda la cotización";
+                }
+            }
             elseif ($nuevoEstado == 'MOSTRAR_RESUMEN') {
                 $carrito = session('carrito_chatbot', []);
                 $res = "RESUMEN DE COTIZACION\n\n";
@@ -235,16 +284,11 @@ return response()->json([
                 }
                 $reply = $res . "----------\nTOTAL: Bs. " . number_format($total, 2) . "\n\n1. Confirmar Cotizacion y Elevar a Gerencia para confirmar adquisicion \n2. Cancelar todo";
             }
-            elseif ($nuevoEstado == 'SOLICITAR_CANTIDAD') {
-                $uni = session('temp_unidad');
-                $reply = "Indica la cantidad en " . $uni . ":\n(Ej: " . ($uni == 'L' ? "1.5" : "250") . ")";
-            } else {
-                $paso = DB::table('chatbot_pasos')->where('estado_actual', $nuevoEstado)->first();
-                $reply = $paso->mensaje_bot ?? "Selecciona una opción:";
+            else {
+                $reply = "Selecciona una opción:";
             }
         }
 
-        // [LOG] Guardar respuesta del bot
         $this->registrarLog($idConversacion, 'bot', $reply);
 
         return response()->json(['reply' => $reply, 'id_conversacion' => $idConversacion]);
@@ -279,7 +323,6 @@ return response()->json([
                     ]);
                 }
 
-                // ÉXITO: Sellar conversación
                 $this->finalizarConversacion($id, 'FINALIZADA');
             });
 
@@ -287,8 +330,7 @@ return response()->json([
             $this->registrarLog($id, 'bot', "Cotización guardada exitosamente.");
             
             return response()->json([
-                   'reply' => " Cotización guardada correctamente.\n\nEsta propuesta ha sido elevada a nuestra Gerencia para su validación técnica y comercial. "
-                
+                'reply' => "Cotización guardada correctamente.\n\nEsta propuesta ha sido elevada a nuestra Gerencia para su validación técnica y comercial."
             ]);
         } catch (\Exception $e) {
             return response()->json(['reply' => 'Error técnico, intente más tarde.', 'id_conversacion' => $id]);

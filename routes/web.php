@@ -102,28 +102,25 @@ Route::middleware('auth')->group(function () {
 */
 Route::middleware(['auth'])->prefix('ventas')->name('ventas.')->group(function () {
 
-    // 1. Dashboard Principal
     Route::get('/', [ChatVentasController::class, 'dashboardPrincipal'])->name('dashboard');
     
-    // 2. Módulo de Chat y Atención en Vivo
     Route::prefix('chat')->name('chat.')->group(function () {
         
         Route::get('/bandeja', [ChatVentasController::class, 'bandeja'])->name('bandeja');
-        
         Route::get('/derivaciones', [ChatVentasController::class, 'obtenerDerivaciones'])->name('derivaciones');
-        
-        //NUEVAS RUTAS: Consola de atención y carga asíncrona del Historial para el Agente
         Route::get('/atender/{id}', [ChatVentasController::class, 'vistaAtenderAgente'])->name('atender');
         Route::post('/enviar-agente/{id}', [ChatVentasController::class, 'enviarMensajeAgente'])->name('enviar.agente');
         Route::get('/mensajes-agente/{id}', [ChatVentasController::class, 'obtenerMensajesAgente'])->name('mensajes.agente');
+        
+        Route::post('/finalizar-agente/{id}', [ChatVentasController::class, 'finalizarChatAgente'])->name('finalizar');
     });
 
     Route::prefix('cotizaciones')->name('cotizaciones.')->group(function () {
         
         Route::get('/', [CotizacionController::class, 'indexVentas'])->name('index');
-        
+
         Route::get('/data', [CotizacionController::class, 'dataVentas'])->name('data');
-        
+
         Route::post('/{id}/actualizar-estado', [CotizacionController::class, 'actualizarEstadoVentas'])->name('actualizarEstado');
         Route::get('/{id}/detalle', [CotizacionController::class, 'obtenerDetalleVentas'])->name('detalle');
     });
