@@ -76,8 +76,8 @@
 function getEstadoClass(idEstado) {
     const colores = {
         1: 'bg-yellow-100 text-yellow-800', 
-        2: 'bg-green-100 text-green-800',   
-        3: 'bg-red-100 text-red-800'         
+        3: 'bg-green-100 text-green-800',   
+        2: 'bg-red-100 text-red-800'         
     };
     return colores[idEstado] || 'bg-gray-100 text-gray-800';
 }
@@ -182,13 +182,22 @@ function cerrarModal() {
     modal.classList.remove('flex');
     modal.classList.add('hidden');
 }
-
 function cambiarEstado(idCotizacion, selectElement) {
-    const nuevoEstadoId = selectElement.value;
+    const nuevoEstadoId = parseInt(selectElement.value);
     const textoEstadoSeleccionado = selectElement.options[selectElement.selectedIndex].text;
     const notificacion = document.getElementById('notificacion-estado');
     
-    fetch(`/ventas/cotizaciones/${idCotizacion}/actualizar-estado`, {
+    // URL base por defecto
+    let url = `/ventas/cotizaciones/${idCotizacion}/actualizar-estado`;
+    
+    // URLs corregidas con los prefijos correspondientes del sistema de rutas
+    if (nuevoEstadoId === 3) {
+        url = `/ventas/cotizaciones/${idCotizacion}/aprobar`;
+    } else if (nuevoEstadoId === 2) {
+        url = `/ventas/cotizaciones/${idCotizacion}/rechazar`;
+    }
+    
+    fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -203,11 +212,11 @@ function cambiarEstado(idCotizacion, selectElement) {
             badge.className = `px-2 py-1 text-xs rounded-full ${getEstadoClass(nuevoEstadoId)}`;
             badge.innerText = textoEstadoSeleccionado;
             
-            notificacion.innerText = "Estado actualizado con éxito";
+            notificacion.innerText = res.message || "Estado actualizado con éxito";
             notificacion.classList.remove('hidden');
             setTimeout(() => notificacion.classList.add('hidden'), 3000);
         } else {
-            alert('No se pudo actualizar el estado');
+            alert(res.message || 'No se pudo actualizar el estado');
         }
     })
     .catch(error => {

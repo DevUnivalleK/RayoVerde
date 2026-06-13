@@ -28,6 +28,38 @@ class ChatbotWebhookController extends Controller
             ]);
     }
 
+    /**
+     * Helper para obtener el catálogo de productos único, priorizando la menor cantidad/medida.
+     */
+    private function obtenerProductosCatalogo() {
+        $todosLosProductos = DB::table('productos')->get();
+        $agrupados = [];
+
+        foreach ($todosLosProductos as $producto) {
+            // Expresión regular para capturar el nombre base y el volumen (ej: Aceite Coco 250ml)
+            if (preg_match('/^(.*?)\s*(\d+(?:\.\d+)?)\s*(ml|L|l)/i', $producto->nombre, $matches)) {
+                $nombreBase = trim($matches[1]);
+                $valBase = (float)$matches[2];
+                $uniBase = strtolower($matches[3]);
+                $enLitros = ($uniBase == 'ml') ? $valBase / 1000 : $valBase;
+            } else {
+                $nombreBase = trim($producto->nombre);
+                $enLitros = 1.0; // Valor por defecto si no tiene formato estándar
+            }
+
+            // Si el nombre base no existe en el array o si este registro tiene menor cantidad en litros, lo priorizamos
+            if (!isset($agrupados[$nombreBase]) || $enLitros < $agrupados[$nombreBase]['litros_base']) {
+                $agrupados[$nombreBase] = [
+                    'producto' => $producto,
+                    'litros_base' => $enLitros
+                ];
+            }
+        }
+
+        // Devolvemos la lista limpia de objetos de producto ordenados por ID para mantener consistencia
+        return collect(array_column($agrupados, 'producto'))->sortBy('id_producto')->values()->all();
+    }
+
     public function handle(Request $request)
     {
         $rawMessage = trim($request->json('message'));
@@ -129,7 +161,7 @@ class ChatbotWebhookController extends Controller
                 break;
 
             case 'SOLICITAR_PRODUCTO':
-                $productos = DB::table('productos')->get();
+                $productos = $this->obtenerProductosCatalogo(); // <--- Aquí usamos el catálogo filtrado sin duplicados
                 $idx = (int)$userMessage - 1;
                 if (isset($productos[$idx])) {
                     session(['temp_prod' => [
@@ -158,6 +190,7 @@ class ChatbotWebhookController extends Controller
                 $baseEnLitros = ($uniBase == 'ml') ? $valBase / 1000 : $valBase;
                 $userEnLitros = ($uniUser == 'ml') ? $cantUser / 1000 : $cantUser;
 
+                // Regla existente: No cotizar cantidades menores al volumen original del precio mostrado
                 if ($userEnLitros < ($baseEnLitros - 0.0001)) {
                     $nuevoEstado = 'ERROR_CANTIDAD_MINIMA';
                     $msgMinimo = ($uniBase == 'ml') ? "{$valBase}ml" : "{$valBase}L";
@@ -178,11 +211,31 @@ class ChatbotWebhookController extends Controller
                     return response()->json(['reply' => $reply, 'id_conversacion' => $idConversacion]);
                 }
 
-                $subtotal = ($prod['precio'] / $baseEnLitros) * $userEnLitros;
+                // NUEVA REGLA DE NEGOCIO: Calcular el descuento individual escalonado según volumen en Litros
+                $descuentoPct = 0;
+                if ($userEnLitros >= 50) {
+                    $descuentoPct = 15;
+                } elseif ($userEnLitros >= 20) {
+                    $descuentoPct = 10;
+                } elseif ($userEnLitros >= 5) {
+                    $descuentoPct = 5;
+                }
+
+                // Cálculo del precio base por litro, escalado por la cantidad solicitada
+                $subtotalOriginal = ($prod['precio'] / $baseEnLitros) * $userEnLitros;
+                // Aplicamos el porcentaje correspondiente
+                $subtotalConDescuento = $subtotalOriginal * (1 - ($descuentoPct / 100));
+
                 $carrito = session('carrito_chatbot', []);
                 $carrito[] = [
-                    'nombre' => $prod['nombre'], 'id_prod' => $prod['id'], 
-                    'cant' => $cantUser, 'uni' => $uniUser, 'sub' => $subtotal
+                    'id_prod'  => $prod['id'], 
+                    'nombre'   => $prod['nombre'], 
+                    'cant'     => $cantUser, 
+                    'uni'      => $uniUser, 
+                    'litros'   => $userEnLitros,
+                    'precio_u' => ($prod['precio'] / $baseEnLitros), // guardamos costo base por litro
+                    'desc_pct' => $descuentoPct,
+                    'sub'      => $subtotalConDescuento
                 ];
                 session(['carrito_chatbot' => $carrito]);
                 $nuevoEstado = 'PREGUNTAR_BUCLE';
@@ -194,7 +247,8 @@ class ChatbotWebhookController extends Controller
                 if ($userMessage == '1') {
                     $nuevoEstado = 'SOLICITAR_CANTIDAD';
                 } elseif ($userMessage == '2') {
-                    session()->forget(['temp_prod', 'temp_unidad']);
+                    $clearSessionKeys = ['temp_prod', 'temp_unidad'];
+                    session()->forget($clearSessionKeys);
                     if (!empty($carrito)) {
                         $nuevoEstado = 'MOSTRAR_RESUMEN';
                     } else {
@@ -248,7 +302,7 @@ class ChatbotWebhookController extends Controller
                 $reply .= (count($faqs) + 1) . ". No veo mi duda (Hablar con un asesor)\n\nO escribe Volver.";
             }
             elseif ($nuevoEstado == 'SOLICITAR_PRODUCTO') {
-                $prods = DB::table('productos')->get();
+                $prods = $this->obtenerProductosCatalogo(); // <--- Mostramos catálogo único al usuario
                 $reply = "Selecciona un producto:\n";
                 foreach ($prods as $i => $p) $reply .= ($i + 1) . ". " . $p->nombre . " (Bs. " . $p->precio . ")\n";
             } 
@@ -280,7 +334,11 @@ class ChatbotWebhookController extends Controller
                 $res = "RESUMEN DE COTIZACION\n\n";
                 $total = array_sum(array_column($carrito, 'sub'));
                 foreach ($carrito as $c) {
-                    $res .= "- {$c['nombre']}\n  {$c['cant']} {$c['uni']} -> Bs. " . number_format($c['sub'], 2) . "\n\n";
+                    $res .= "- {$c['nombre']}\n   {$c['cant']} {$c['uni']} -> Bs. " . number_format($c['sub'], 2);
+                    if ($c['desc_pct'] > 0) {
+                        $res .= " (*¡{$c['desc_pct']}% Descuento Vol.*)";
+                    }
+                    $res .= "\n\n";
                 }
                 $reply = $res . "----------\nTOTAL: Bs. " . number_format($total, 2) . "\n\n1. Confirmar Cotizacion y Elevar a Gerencia para confirmar adquisicion \n2. Cancelar todo";
             }
@@ -308,6 +366,7 @@ class ChatbotWebhookController extends Controller
                     'codigo' => 'COT-' . strtoupper(uniqid()),
                     'id_usuario' => $idUsuarioLogueado,
                     'id_estado' => 1,
+                    'descuento_aplicado' => 0, // Como es individual por producto, el global queda en 0 o vacío
                     'subtotal' => $total,
                     'total' => $total,
                     'generado_en' => now()
@@ -315,11 +374,12 @@ class ChatbotWebhookController extends Controller
 
                 foreach ($carrito as $item) {
                     DB::table('detalle_cotizaciones')->insert([
-                        'id_cotizacion' => $cotId,
-                        'id_producto'   => $item['id_prod'],
-                        'volumen_litros'=> (float)($item['uni'] == 'ml' ? $item['cant'] / 1000 : $item['cant']),
-                        'precio_unitario' => (float)($item['sub'] / ($item['cant'] == 0 ? 1 : $item['cant'])),
-                        'subtotal'      => (float)$item['sub']
+                        'id_cotizacion'   => $cotId,
+                        'id_producto'     => $item['id_prod'],
+                        'volumen_litros'  => (float)$item['litros'],
+                        'precio_unitario' => (float)$item['precio_u'],
+                        'descuento_pct'   => (float)$item['desc_pct'], // <--- Guardamos el descuento correspondiente al tramo
+                        'subtotal'        => (float)$item['sub']
                     ]);
                 }
 

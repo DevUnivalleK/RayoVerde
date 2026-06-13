@@ -93,6 +93,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/cotizaciones/{id}/enviar-correo', [CotizacionController::class, 'enviarCorreo'])
      ->name('cotizaciones.enviarCorreo');
      
+     // --- Sistema de Notificaciones e Interacción Just In Time ---
+    Route::post('/notificaciones/{id}/leer', [ChatVentasController::class, 'leerNotificacion'])->name('notificaciones.leer');
+    
+    // Ruta de destino del cliente tras confirmar su pedido (Historial de compras/pagos)
+    Route::get('/mis-pedidos', function () { 
+        return view('cliente.pedidos'); // O la vista donde proceses tus QR y pagos
+    })->name('pedidos.index');
+
 });
 
 /*
@@ -115,7 +123,7 @@ Route::middleware(['auth'])->prefix('ventas')->name('ventas.')->group(function (
         Route::post('/finalizar-agente/{id}', [ChatVentasController::class, 'finalizarChatAgente'])->name('finalizar');
     });
 
-    Route::prefix('cotizaciones')->name('cotizaciones.')->group(function () {
+   Route::prefix('cotizaciones')->name('cotizaciones.')->group(function () {
         
         Route::get('/', [CotizacionController::class, 'indexVentas'])->name('index');
 
@@ -123,6 +131,10 @@ Route::middleware(['auth'])->prefix('ventas')->name('ventas.')->group(function (
 
         Route::post('/{id}/actualizar-estado', [CotizacionController::class, 'actualizarEstadoVentas'])->name('actualizarEstado');
         Route::get('/{id}/detalle', [CotizacionController::class, 'obtenerDetalleVentas'])->name('detalle');
+
+        // NUEVAS RUTAS DE CONTROL DE NOTIFICACIONES
+        Route::post('/{id_cotizacion}/aprobar', [ChatVentasController::class, 'aprobarCotizacion'])->name('aprobar');
+        Route::post('/{id_cotizacion}/rechazar', [ChatVentasController::class, 'rechazarCotizacion'])->name('rechazar');
     });
 });
 

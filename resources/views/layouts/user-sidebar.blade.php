@@ -215,63 +215,93 @@
                     @endif
                 </a>
 
-                {{-- Notificaciones --}}
-                <div class="relative" id="notif-wrapper">
-                    <button onclick="toggleNotifPanel()" class="hbtn" title="Mis notificaciones">
-                        <i class="fas fa-bell"></i>
-                        <span class="bp absolute -top-1 -right-1 w-[15px] h-[15px] rounded-full
-                                     flex items-center justify-center text-white font-bold"
-                              style="background:#ef4444; font-size:0.5rem;">2</span>
-                    </button>
+             {{-- Notificaciones --}}
+<div class="relative" id="notif-wrapper">
+    <button onclick="toggleNotifPanel()" class="hbtn" title="Mis notificaciones">
+        <i class="fas fa-bell"></i>
+        @if(isset($conteoSinLeer) && $conteoSinLeer > 0)
+            <span class="bp absolute -top-1 -right-1 w-[15px] h-[15px] rounded-full
+                         flex items-center justify-center text-white font-bold"
+                  style="background:#ef4444; font-size:0.5rem;">
+                {{ $conteoSinLeer }}
+            </span>
+        @endif
+    </button>
 
-                    <div id="notif-panel"
-                         class="hidden dropdown-panel absolute right-0 top-11 w-80 z-50 overflow-hidden">
-                        {{-- Cabecera panel --}}
-                        <div class="flex items-center justify-between px-4 py-2.5"
-                             style="background:linear-gradient(135deg,#0e2a10,#1e6b2e);
-                                    border-bottom:1px solid rgba(76,175,80,0.2);">
-                            <span class="font-semibold" style="font-size:0.82rem; color:#d4edda;">
-                                <i class="fas fa-bell mr-2" style="color:#4CAF50;"></i>Mis Notificaciones
-                            </span>
-                            <button onclick="toggleNotifPanel()"
-                                    style="color:rgba(255,255,255,0.5); font-size:0.75rem;">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div style="max-height:230px; overflow-y:auto;">
-                            <div class="flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
-                                 style="border-bottom:1px solid #f0faf4;">
+    <div id="notif-panel"
+         class="hidden dropdown-panel absolute right-0 top-11 w-80 z-50 overflow-hidden">
+        {{-- Cabecera panel --}}
+        <div class="flex items-center justify-between px-4 py-2.5"
+             style="background:linear-gradient(135deg,#0e2a10,#1e6b2e);
+                    border-bottom:1px solid rgba(76,175,80,0.2);">
+            <span class="font-semibold" style="font-size:0.82rem; color:#d4edda;">
+                <i class="fas fa-bell mr-2" style="color:#4CAF50;"></i>Mis Notificaciones
+            </span>
+            <button onclick="toggleNotifPanel()"
+                    style="color:rgba(255,255,255,0.5); font-size:0.75rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div style="max-height:280px; overflow-y:auto;">
+            @if(isset($notificaciones) && $notificaciones->count() > 0)
+                @foreach($notificaciones as $noti)
+                    @if(!$noti->leida && $noti->tipo === 'APROBADA')
+                        {{-- Caso especial: Notificación interactiva para crear el pedido Just in Time --}}
+                        <form action="{{ route('notificaciones.leer', $noti->id_notificacion) }}" method="POST" id="form-noti-{{ $noti->id_notificacion }}">
+                            @csrf
+                            <div onclick="document.getElementById('form-noti-{{ $noti->id_notificacion }}').submit();"
+                                 class="flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                                 style="border-bottom:1px solid #f0faf4; background-color: #f0f9ff;">
                                 <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                                      style="background:#d9f2e4;">
-                                    <i class="fas fa-check-circle" style="color:#27ae60; font-size:0.65rem;"></i>
-                                </div>
-                                <div>
-                                    <p style="font-size:0.82rem; font-weight:600; color:#1d2b1a;">Pedido #1042 aceptado</p>
-                                    <p style="font-size:0.73rem; color:#3a6040; margin-top:2px;">Tu pedido está en preparación</p>
-                                    <p style="font-size:0.68rem; color:#7dcba8; margin-top:3px;">Hace 10 min</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                                     style="background:#e8f5e0;">
                                     <i class="fas fa-file-invoice-dollar" style="color:#27ae60; font-size:0.65rem;"></i>
                                 </div>
-                                <div>
-                                    <p style="font-size:0.82rem; font-weight:600; color:#1d2b1a;">Cotización lista</p>
-                                    <p style="font-size:0.73rem; color:#3a6040; margin-top:2px;">Tu cotización #08 fue procesada</p>
-                                    <p style="font-size:0.68rem; color:#7dcba8; margin-top:3px;">Hace 2 horas</p>
+                                <div class="flex-1">
+                                    <p style="font-size:0.82rem; font-weight:600; color:#1d2b1a;">¡Cotización Aprobada!</p>
+                                    <p style="font-size:0.73rem; color:#3a6040; margin-top:2px; line-height: 1.2;">{{ $noti->mensaje }}</p>
+                                    <p style="font-size:0.68rem; color:#7dcba8; margin-top:4px; font-weight: bold; color: #1e6b2e;"><i class="fas fa-shopping-cart mr-1"></i>Haz clic aquí para confirmar y pagar</p>
+                                    <p style="font-size:0.65rem; color:#9cbda6; margin-top:2px;">{{ \Carbon\Carbon::parse($noti->enviada_en)->diffForHumans() }}</p>
                                 </div>
                             </div>
+                        </form>
+                    @else
+                        {{-- Notificaciones ordinarias (Rechazadas o ya leídas) --}}
+                        <div class="flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                             style="border-bottom:1px solid #f0faf4; background-color: {{ $noti->leida ? '#ffffff' : '#fcfdfb' }};">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                                 style="background: {{ $noti->tipo === 'RECHAZADA' ? '#fde8e8' : '#e8f5e0' }};">
+                                <i class="{{ $noti->tipo === 'RECHAZADA' ? 'fas fa-times-circle' : 'fas fa-check-circle' }}" 
+                                   style="color: {{ $noti->tipo === 'RECHAZADA' ? '#e53e3e' : '#27ae60' }}; font-size:0.65rem;"></i>
+                            </div>
+                            <div>
+                                <p style="font-size:0.82rem; font-weight:600; color:#1d2b1a;">
+                                    {{ $noti->tipo === 'RECHAZADA' ? 'Cotización Rechazada' : 'Notificación' }}
+                                </p>
+                                <p style="font-size:0.73rem; color:#5c7a5f; margin-top:2px; line-height: 1.2;">{{ $noti->mensaje }}</p>
+                                <p style="font-size:0.65rem; color:#9cbda6; margin-top:3px;">{{ \Carbon\Carbon::parse($noti->enviada_en)->diffForHumans() }}</p>
+                            </div>
                         </div>
-                        <div class="text-center py-2"
-                             style="background:#f5fbf2; border-top:1px solid #c3e6cb;">
-                            <a href="{{ url('/mis-cotizaciones') }}"
-                               style="font-size:0.75rem; font-weight:600; color:#1e6b2e;">
-                                Ver todas
-                            </a>
-                        </div>
-                    </div>
+                    @endif
+                @endforeach
+            @else
+                {{-- Estado vacío --}}
+                <div class="text-center py-8" style="color: #727b73;">
+                    <i class="fas fa-bell-slash mb-2 d-block" style="font-size: 1.2rem; color: #cbd5e1;"></i>
+                    <p style="font-size:0.78rem;">No tienes alertas pendientes</p>
                 </div>
+            @endif
+        </div>
+        
+        <div class="text-center py-2"
+             style="background:#f5fbf2; border-top:1px solid #c3e6cb;">
+            <a href="{{ url('/mis-cotizaciones') }}"
+               style="font-size:0.75rem; font-weight:600; color:#1e6b2e;">
+                Ver historial de cotizaciones
+            </a>
+        </div>
+    </div>
+</div>
 
                 {{-- Usuario --}}
                 <div class="relative" id="user-wrapper">

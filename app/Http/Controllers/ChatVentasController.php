@@ -8,8 +8,6 @@ use Carbon\Carbon;
 
 class ChatVentasController extends Controller
 {
-    // --- DASHBOARD Y BANDEJA ---
-
     public function dashboardPrincipal()
     {
         $chatsEnEspera = DB::table('conversaciones_chatbot')
@@ -65,8 +63,6 @@ class ChatVentasController extends Controller
         return response()->json(['success' => true, 'data' => $derivaciones]);
     }
 
-    // --- FLUJO DEL CLIENTE ---
-
     public function vistaEsperaCliente($id)
     {
         $conversacion = DB::table('conversaciones_chatbot')->where('id_conversacion', $id)->first();
@@ -77,7 +73,7 @@ class ChatVentasController extends Controller
     {
         $mensajes = DB::table('mensajes_chatbot')
             ->where('id_conversacion', $id)
-            ->whereIn('emisor', ['usuario', 'agente', 'sistema'])
+            ->whereIn('emisor', ['usuario', 'bot'])
             ->orderBy('enviado_en', 'asc')
             ->get();
 
@@ -86,16 +82,8 @@ class ChatVentasController extends Controller
 
     public function enviarMensajeCliente(Request $request, $id)
     {
-        DB::table('mensajes_chatbot')->insert([
-            'id_conversacion' => $id,
-            'emisor'          => 'usuario',
-            'contenido'       => $request->message,
-            'enviado_en'      => now()
-        ]);
         return response()->json(['success' => true]);
     }
-
-    // --- FLUJO DEL PERSONAL DE VENTAS ---
 
     public function vistaAtenderAgente($id)
     {
@@ -112,6 +100,7 @@ class ChatVentasController extends Controller
     {
         $mensajes = DB::table('mensajes_chatbot')
             ->where('id_conversacion', $id)
+            ->whereIn('emisor', ['usuario', 'bot'])
             ->orderBy('enviado_en', 'asc')
             ->get();
 
@@ -120,28 +109,169 @@ class ChatVentasController extends Controller
 
     public function enviarMensajeAgente(Request $request, $id)
     {
-        DB::table('mensajes_chatbot')->insert([
-            'id_conversacion' => $id,
-            'emisor'          => 'agente',
-            'contenido'       => $request->contenido,
-            'enviado_en'      => now()
-        ]);
         return response()->json(['success' => true]);
     }
 
     public function finalizarChatAgente($id)
     {
-
         DB::table('conversaciones_chatbot')
-        ->where('id_conversacion', $id)
-        ->update([
-            'derivada_a_agente' => false,
-            'estado'            => 'FINALIZADA', 
-            'finalizada_en'     => now()
-        ]);
+            ->where('id_conversacion', $id)
+            ->update([
+                'derivada_a_agente' => false,
+                'estado'            => 'FINALIZADA', 
+                'finalizada_en'     => now()
+            ]);
        
         return response()->json(['success' => true]);
     }
 
-   
+   public function aprobarCotizacion(Request $request, $id_cotizacion)
+    {
+        $cotizacion = DB::table('cotizaciones')->where('id_cotizacion', $id_cotizacion)->first();
+
+        if (!$cotizacion) {
+            return response()->json(['success' => false, 'message' => 'Cotización no encontrada en el sistema.'], 404);
+        }
+
+        $cliente = DB::table('clientes')->where('id_usuario', $cotizacion->id_usuario)->first();
+
+        if (!$cliente) {
+            return response()->json(['success' => false, 'message' => 'El id_usuario (' . $cotizacion->id_usuario . ') de la cotización no tiene un perfil asociado en la tabla clientes.'], 404);
+        }
+
+        try {
+            DB::transaction(function () use ($cotizacion, $cliente, $id_cotizacion) {
+                DB::table('cotizaciones')
+                    ->where('id_cotizacion', $id_cotizacion)
+                    ->update(['id_estado' => 3]);
+
+                DB::table('notificaciones')->insert([
+                    'id_cliente'     => $cliente->id_cliente,
+                    'id_cotizacion'  => $id_cotizacion,
+                    'tipo'           => 'APROBADA',
+                    'mensaje'        => "¡Buenas noticias! Tu cotización con código " . ($cotizacion->codigo ?? $id_cotizacion) . " por un total de Bs. " . number_format($cotizacion->total, 2) . " ha sido aprobada por el área de ventas. Haz clic aquí para confirmar y generar tu orden de pago.",
+                    'leida'          => false,
+                    'enviada_en'     => now()
+                ]);
+            });
+
+            return response()->json(['success' => true, 'message' => 'Cotización aprobada con éxito. Notificación enviada al cliente.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function rechazarCotizacion(Request $request, $id_cotizacion)
+    {
+        $cotizacion = DB::table('cotizaciones')->where('id_cotizacion', $id_cotizacion)->first();
+
+        if (!$cotizacion) {
+            return response()->json(['success' => false, 'message' => 'Cotización no encontrada en el sistema.'], 404);
+        }
+
+        $cliente = DB::table('clientes')->where('id_usuario', $cotizacion->id_usuario)->first();
+
+        if (!$cliente) {
+            return response()->json(['success' => false, 'message' => 'El id_usuario (' . $cotizacion->id_usuario . ') de la cotización no tiene un perfil asociado en la tabla clientes.'], 404);
+        }
+
+        try {
+            DB::transaction(function () use ($cotizacion, $cliente, $id_cotizacion) {
+                DB::table('cotizaciones')
+                    ->where('id_cotizacion', $id_cotizacion)
+                    ->update(['id_estado' => 2]);
+
+                DB::table('notificaciones')->insert([
+                    'id_cliente'     => $cliente->id_cliente,
+                    'id_cotizacion'  => $id_cotizacion,
+                    'tipo'           => 'RECHAZADA',
+                    'mensaje'        => "Tu cotización con código " . ($cotizacion->codigo ?? $id_cotizacion) . " no pudo ser aprobada en esta ocasión debido a que no cumple con las políticas comerciales vigentes. Si tienes dudas, ponte en contacto con soporte técnico.",
+                    'leida'          => false,
+                    'enviada_en'     => now()
+                ]);
+            });
+
+            return response()->json(['success' => true, 'message' => 'Cotización rechazada. El cliente ha sido notificado.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function leerNotificacion($id_notificacion)
+{
+    $notificacion = DB::table('notificaciones')->where('id_notificacion', $id_notificacion)->first();
+
+    if (!$notificacion) {
+        return redirect()->back()->with('error', 'Notificación no encontrada.');
+    }
+
+    if ($notificacion->leida) {
+        return redirect()->route('cliente.carrito')->with('info', 'Esta orden ya fue procesada anteriormente.');
+    }
+
+    try {
+        DB::transaction(function () use ($notificacion, $id_notificacion) {
+            // 1. Marcar notificación como leída
+            DB::table('notificaciones')
+                ->where('id_notificacion', $id_notificacion)
+                ->update(['leida' => true]);
+
+            if ($notificacion->tipo === 'APROBADA' && !is_null($notificacion->id_cotizacion)) {
+                
+                $cotizacion = DB::table('cotizaciones')->where('id_cotizacion', $notificacion->id_cotizacion)->first();
+                $cliente = DB::table('clientes')->where('id_cliente', $notificacion->id_cliente)->first();
+
+                if ($cotizacion && $cliente) {
+                    $detalles = DB::table('detalle_cotizaciones')
+                        ->join('productos', 'detalle_cotizaciones.id_producto', '=', 'productos.id_producto')
+                        ->where('detalle_cotizaciones.id_cotizacion', $notificacion->id_cotizacion)
+                        ->select('detalle_cotizaciones.*', 'productos.nombre', 'productos.imagen_url')
+                        ->get();
+                    
+                    // A. PREPARAR DATOS PARA SESIÓN Y TABLA
+                    $carritoEstructurado = [];
+                    foreach ($detalles as $linea) {
+                        $carritoEstructurado[$linea->id_producto] = [
+                            'id_producto' => $linea->id_producto,
+                            'nombre'      => $linea->nombre,
+                            'precio'      => (float)$linea->precio_unitario,
+                            'imagen_url'  => $linea->imagen_url,
+                            'cantidad'    => (int)$linea->volumen_litros,
+                        ];
+                    }
+
+                    // B. INYECTAR EN LA SESIÓN (Para que el CarritoController lo vea)
+                    session(['carrito' => $carritoEstructurado]);
+
+                    // C. PERSISTIR EN TABLA (Tu respaldo histórico)
+                    $existePedido = DB::table('pedidos_pendientes')
+                        ->where('id_cliente', $cliente->id_cliente)
+                        ->where('codigo', 'PED-' . ($cotizacion->codigo ?? $cotizacion->id_cotizacion))
+                        ->exists();
+
+                    if (!$existePedido) {
+                        DB::table('pedidos_pendientes')->insert([
+                            'id_cliente'     => $cliente->id_cliente,
+                            'codigo'         => 'PED-' . ($cotizacion->codigo ?? $cotizacion->id_cotizacion),
+                            'total'          => $cotizacion->total,
+                            'nombre_titular' => $cliente->empresa ?? 'Cliente Rayo Verde',
+                            'banco'          => 'Pendiente Selección',
+                            'carrito'        => json_encode($carritoEstructurado),
+                            'estado'         => 'esperando',
+                            'created_at'     => now(),
+                            'updated_at'     => now()
+                        ]);
+                    }
+                }
+            }
+        });
+
+        return redirect()->route('cliente.carrito')->with('success', 'Pedido cargado correctamente. Procede con tu pago.');
+
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Error al procesar la confirmación: ' . $e->getMessage());
+    }
+}
 }
