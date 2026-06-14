@@ -199,7 +199,7 @@ class ChatVentasController extends Controller
         }
     }
 
-    public function leerNotificacion($id_notificacion)
+     public function leerNotificacion($id_notificacion)
 {
     $notificacion = DB::table('notificaciones')->where('id_notificacion', $id_notificacion)->first();
 
@@ -213,11 +213,13 @@ class ChatVentasController extends Controller
 
     try {
         DB::transaction(function () use ($notificacion, $id_notificacion) {
+            
             // 1. Marcar notificación como leída
             DB::table('notificaciones')
                 ->where('id_notificacion', $id_notificacion)
                 ->update(['leida' => true]);
 
+            // 2. Si es una cotización aprobada, cargar los datos en sesión
             if ($notificacion->tipo === 'APROBADA' && !is_null($notificacion->id_cotizacion)) {
                 
                 $cotizacion = DB::table('cotizaciones')->where('id_cotizacion', $notificacion->id_cotizacion)->first();
@@ -230,7 +232,6 @@ class ChatVentasController extends Controller
                         ->select('detalle_cotizaciones.*', 'productos.nombre', 'productos.imagen_url')
                         ->get();
                     
-                    // A. PREPARAR DATOS PARA SESIÓN Y TABLA
                     $carritoEstructurado = [];
                     foreach ($detalles as $linea) {
                         $carritoEstructurado[$linea->id_producto] = [
@@ -239,39 +240,29 @@ class ChatVentasController extends Controller
                             'precio'      => (float)$linea->precio_unitario,
                             'imagen_url'  => $linea->imagen_url,
                             'cantidad'    => (int)$linea->volumen_litros,
+                            'subtotal'    => (float)$linea->subtotal, 
                         ];
                     }
 
-                    // B. INYECTAR EN LA SESIÓN (Para que el CarritoController lo vea)
-                    session(['carrito' => $carritoEstructurado]);
-
-                    // C. PERSISTIR EN TABLA (Tu respaldo histórico)
-                    $existePedido = DB::table('pedidos_pendientes')
-                        ->where('id_cliente', $cliente->id_cliente)
-                        ->where('codigo', 'PED-' . ($cotizacion->codigo ?? $cotizacion->id_cotizacion))
-                        ->exists();
-
-                    if (!$existePedido) {
-                        DB::table('pedidos_pendientes')->insert([
-                            'id_cliente'     => $cliente->id_cliente,
-                            'codigo'         => 'PED-' . ($cotizacion->codigo ?? $cotizacion->id_cotizacion),
-                            'total'          => $cotizacion->total,
-                            'nombre_titular' => $cliente->empresa ?? 'Cliente Rayo Verde',
-                            'banco'          => 'Pendiente Selección',
-                            'carrito'        => json_encode($carritoEstructurado),
-                            'estado'         => 'esperando',
-                            'created_at'     => now(),
-                            'updated_at'     => now()
-                        ]);
-                    }
+                    // Guardamos en sesión.
+                    // ELIMINAMOS LA LÓGICA DE CREAR PEDIDO AQUÍ.
+                    session([
+                        'carrito' => $carritoEstructurado,
+                        'datos_cotizacion' => [
+                            'es_cotizacion'     => true,
+                            'id_cotizacion'     => $notificacion->id_cotizacion,
+                            'codigo_cotizacion' => $cotizacion->codigo,
+                            'total_fijo'        => (float)$cotizacion->total
+                        ]
+                    ]);
                 }
             }
         });
 
-        return redirect()->route('cliente.carrito')->with('success', 'Pedido cargado correctamente. Procede con tu pago.');
+        return redirect()->route('cliente.carrito')->with('success', 'Cotización cargada correctamente. Procede con tu pago.');
 
     } catch (\Exception $e) {
         return redirect()->back()->with('error', 'Error al procesar la confirmación: ' . $e->getMessage());
     }
-}
+ }
 }

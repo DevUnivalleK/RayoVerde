@@ -31,11 +31,22 @@
 
 <script>
 function getEstadoClass(idEstado) {
-    const estados = {1: 'bg-yellow-100 text-yellow-800', 2: 'bg-green-100 text-green-800', 3: 'bg-red-100 text-red-800'};
+    // 1: Pendiente (Amarillo), 2: Rechazado (Rojo), 3: Completado/Aprobado (Verde)
+    const estados = {
+        1: 'bg-yellow-100 text-yellow-800', 
+        2: 'bg-red-100 text-red-800', 
+        3: 'bg-green-100 text-green-800'
+    };
     return estados[idEstado] || 'bg-gray-100 text-gray-800';
 }
+
 function getEstadoTexto(idEstado) {
-    const estados = {1: 'Pendiente', 2: 'Aprobada', 3: 'Rechazada', 4: 'Expirada'};
+    // Asegúrate de que los textos coincidan con tu lógica
+    const estados = {
+        1: 'Pendiente', 
+        2: 'Rechazada', 
+        3: 'Aprobada'
+    };
     return estados[idEstado] || 'Desconocido';
 }
 
