@@ -29,9 +29,186 @@
         }
     </script>
 
-    @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/sidebarAdmin.css') }}">
-    @endpush
+    <style>
+        /* ══════════════════════════════
+           PALETA GENERAL
+           Fondo principal: #0D1F03
+           Verde secundario: #16360A
+           Verde hover: #214D12
+           Verde accent: #4CAF50
+           Verde claro: #7BE07B
+        ══════════════════════════════ */
+
+        /* ── Scrollbar sidebar ── */
+        #sidebar-nav::-webkit-scrollbar       { width: 4px; }
+        #sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+        #sidebar-nav::-webkit-scrollbar-thumb { background: #4CAF50; border-radius: 99px; }
+
+        /* ── Scrollbar global ── */
+        ::-webkit-scrollbar       { width: 6px; }
+        ::-webkit-scrollbar-track { background: #eef4ea; }
+        ::-webkit-scrollbar-thumb { background: #4CAF50; border-radius: 99px; }
+
+        /* ── Base body ── */
+        body { background: #eef2eb; font-family: 'DM Sans', sans-serif; color: #1d2b1a; }
+
+        /* ══════════════════════════════
+           SIDEBAR
+        ══════════════════════════════ */
+        #sidebar {
+            background: linear-gradient(180deg, #0D1F03 0%, #102706 35%, #16360A 100%);
+            width: 232px;
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+            border-right: 1px solid rgba(111,255,111,0.08);
+            box-shadow: 6px 0 24px rgba(0,0,0,0.22);
+        }
+        @media (max-width: 1023px) {
+            #sidebar.sidebar-hidden { transform: translateX(-100%); }
+        }
+
+        .sidebar-brand {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.015);
+            backdrop-filter: blur(6px);
+        }
+
+        /* ── Nav items ── */
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px; border-radius: 12px;
+            font-size: 0.84rem; font-weight: 500;
+            color: #a7b9a1;
+            text-decoration: none; cursor: pointer; width: 100%;
+            transition: background 0.18s ease, color 0.18s ease,
+                        transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .nav-item .ni {
+            width: 16px; text-align: center; font-size: 0.76rem;
+            opacity: 0.7; flex-shrink: 0; transition: opacity 0.18s ease;
+        }
+        .nav-item:hover {
+            background: rgba(76,175,80,0.12);
+            color: #ecffe8;
+            transform: translateX(2px);
+        }
+        .nav-item:hover .ni { opacity: 1; }
+        .nav-item.active {
+            background: linear-gradient(135deg, #2d7a2d 0%, #4CAF50 55%, #67d467 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(76,175,80,0.28), inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+        .nav-item.active .ni { opacity: 1; color: #ffffff; }
+
+        /* ── Section labels ── */
+        .slabel {
+            font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase;
+            color: #58744f; font-weight: 700; padding: 14px 11px 5px;
+        }
+
+        /* ── Submenu ── */
+        .submenu { overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
+        .submenu.open { max-height: 500px; }
+        .s-arrow { transition: transform 0.22s ease; font-size: 0.55rem !important; opacity: 0.5; }
+
+        /* ── Divider ── */
+        .sdiv { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 8px 0; }
+
+        /* ══════════════════════════════
+           HEADER
+        ══════════════════════════════ */
+        .admin-header {
+            background: rgba(255,255,255,0.94);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #d8e8d3;
+            box-shadow: 0 2px 0 rgba(76,175,80,0.08), 0 8px 24px rgba(0,0,0,0.04);
+        }
+        .top-stripe {
+            height: 3px;
+            background: linear-gradient(90deg, #0D1F03 0%, #2d7a2d 40%, #4CAF50 70%, #7BE07B 100%);
+        }
+
+        /* ── User pill ── */
+        .u-pill {
+            display: flex; align-items: center; gap: 7px;
+            background: linear-gradient(135deg, #f5fff2, #e5f5df);
+            border: 1px solid #c7e6c0; border-radius: 50px;
+            padding: 4px 11px 4px 5px; cursor: pointer;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .u-pill:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(76,175,80,0.18); }
+
+        /* ── Search box ── */
+        .search-box {
+            display: flex; align-items: center; gap: 7px;
+            background: #f5fbf2; border: 1px solid #cfe6cb;
+            border-radius: 12px; padding: 7px 13px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .search-box:focus-within {
+            background: #ffffff; border-color: #4CAF50;
+            box-shadow: 0 0 0 4px rgba(76,175,80,0.12);
+        }
+        .search-box input {
+            background: transparent; outline: none; border: none;
+            font-size: 0.82rem; color: #223322; width: 150px;
+        }
+        .search-box input::placeholder { color: #7b8e7a; }
+
+        /* ── Botón icono header (notif, bandeja, etc.) ── */
+        .header-icon-btn {
+            position: relative;
+            width: 34px; height: 34px;
+            border-radius: 11px;
+            display: flex; align-items: center; justify-content: center;
+            background: #f5fbf2;
+            border: 1px solid #cfe6cb;
+            cursor: pointer;
+            transition: background 0.18s ease, border-color 0.18s ease,
+                        box-shadow 0.18s ease, transform 0.18s ease;
+            flex-shrink: 0;
+        }
+        .header-icon-btn:hover {
+            background: #e5f5df;
+            border-color: #4CAF50;
+            box-shadow: 0 4px 14px rgba(76,175,80,0.18);
+            transform: translateY(-1px);
+        }
+        .header-icon-btn img { width: 16px; height: 16px; object-fit: contain; opacity: 0.75; }
+        .header-icon-btn:hover img { opacity: 1; }
+        .header-icon-btn i { font-size: 0.82rem; color: #4a6e4a; }
+        .header-icon-btn:hover i { color: #2d7a2d; }
+
+        /* ══════════════════════════════
+           FOOTER — limpio, solo copyright
+        ══════════════════════════════ */
+        .admin-footer {
+            background: linear-gradient(180deg, #112507 0%, #0D1F03 100%);
+            border-top: 1px solid rgba(111,255,111,0.08);
+            box-shadow: 0 -6px 30px rgba(0,0,0,0.25);
+        }
+
+        /* ══════════════════════════════
+           DROPDOWNS
+        ══════════════════════════════ */
+        .dropdown-panel {
+            background: rgba(255,255,255,0.98);
+            border: 1px solid #d9ead4;
+            border-radius: 18px;
+            box-shadow: 0 10px 34px rgba(0,0,0,0.12);
+            backdrop-filter: blur(12px);
+        }
+
+        /* ── Badge pulse ── */
+        @keyframes badge-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+        .bp { animation: badge-pulse 2s infinite; }
+
+        /* ── Overlay ── */
+        #sidebar-overlay {
+            transition: opacity 0.28s;
+            background: rgba(0,0,0,0.42);
+            backdrop-filter: blur(2px);
+        }
+    </style>
 
     @stack('styles')
 </head>
@@ -90,11 +267,10 @@
             </a>
         </div>
 
-        <!--
         {{-- Envíos/Regiones --}}
         <a href="#" class="nav-item">
             <i class="fas fa-truck ni"></i><span>Envíos / Regiones</span>
-        </a>-->
+        </a>
 
         {{-- Gestión de Ventas --}}
         <button onclick="toggleSubmenu('sub-ventas',this)" class="nav-item">
@@ -130,54 +306,39 @@
         </a> -->
 
         {{-- Reportes --}}
-<button onclick="toggleSubmenu('sub-rep',this)" class="nav-item">
-    <i class="fas fa-chart-bar ni"></i>
-    <span class="flex-1 text-left">Reportes</span>
-    <i class="fas fa-chevron-right s-arrow"></i>
-</button>
-<div id="sub-rep" class="submenu pl-5 mt-0.5 space-y-0.5">
-    <a href="{{ route('admin.reportes.general') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-        <i class="fas fa-chart-pie ni" style="font-size:0.68rem;"></i><span>General</span>
-    </a>
-    <a href="{{ route('admin.reportes.porFecha') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-        <i class="fas fa-calendar-alt ni" style="font-size:0.68rem;"></i><span>Por fecha</span>
-    </a>
-    <a href="{{ route('admin.reportes.filtros') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-        <i class="fas fa-filter ni" style="font-size:0.68rem;"></i><span>Filtrado</span>
-    </a>
-    <a href="{{ route('admin.reportes.exportar.excel') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-        <i class="fas fa-file-excel ni" style="font-size:0.68rem; color:#22c55e;"></i><span>Excel</span>
-    </a>
-    <a href="{{ route('admin.reportes.exportar.pdf') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-        <i class="fas fa-file-pdf ni" style="font-size:0.68rem; color:#ef4444;"></i><span>PDF</span>
-    </a>
-            {{-- Enviar reporte por correo --}}
-    <form method="POST" action="{{ route('admin.enviar.reporte') }}">
-        @csrf
-        <button type="submit"
-                class="nav-item w-full text-left"
-                style="font-size:0.77rem; padding:6px 10px;"
-                onclick="this.disabled=true; this.innerHTML='<i class=\'fas fa-spinner fa-spin ni\' style=\'font-size:0.68rem;\'></i><span> Enviando...</span>'; this.closest(\'form\').submit();">
-            <i class="fas fa-paper-plane ni" style="font-size:0.68rem; color:#60a5fa;"></i>
-            <span>Enviar correo</span>
+        <button onclick="toggleSubmenu('sub-rep',this)" class="nav-item">
+            <i class="fas fa-chart-bar ni"></i>
+            <span class="flex-1 text-left">Reportes</span>
+            <i class="fas fa-chevron-right s-arrow"></i>
         </button>
-    </form>
-</div>
+        <div id="sub-rep" class="submenu pl-5 mt-0.5 space-y-0.5">
+            <a href="{{ route('admin.reportes.index') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+                <i class="fas fa-chart-pie ni" style="font-size:0.68rem;"></i><span>General</span>
+            </a>
+            <a href="{{ route('admin.reportes.porFecha') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+                <i class="fas fa-calendar-alt ni" style="font-size:0.68rem;"></i><span>Por fecha</span>
+            </a>
+            <a href="{{ route('admin.reportes.filtros') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+                <i class="fas fa-filter ni" style="font-size:0.68rem;"></i><span>Filtrado</span>
+            </a>
+            <a href="{{ route('admin.reportes.exportar.excel') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+                <i class="fas fa-file-excel ni" style="font-size:0.68rem; color:#22c55e;"></i><span>Excel</span>
+            </a>
+            <a href="{{ route('admin.reportes.exportar.pdf') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+                <i class="fas fa-file-pdf ni" style="font-size:0.68rem; color:#ef4444;"></i><span>PDF</span>
+            </a>
+        </div>
 
         <p class="slabel">Configuración</p>
-
-
-        <a href="{{ route('admin.usuarios.index') }}" class="nav-item">
-            <i class="fas fa-users ni"></i><span>Gestión de Usuarios</span>
-        </a>
 
         <a href="#" class="nav-item">
             <i class="fas fa-sliders-h ni"></i><span>Config. Comercial</span>
         </a>
 
-        <!--<a href="{{ route('chatbot.index') }}" class="nav-item">
-           <i class="fas fa-robot ni"></i><span>ChatBot</span>
-        </a>-->
+        <a href="{{ route('chatbot.index') }}" class="nav-item">
+            <i class="fas fa-robot ni"></i><span>ChatBot</span>
+        </a>
+
         <hr class="sdiv">
 
         <a href="{{ route('home') }}" target="_blank" class="nav-item"
@@ -200,12 +361,12 @@
             <p style="font-size:0.77rem; font-weight:600; color:#c8e6c8;">{{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</p>
             <p style="font-size:0.63rem; color:#58744f;" class="truncate">{{ Auth::user()->correo }}</p>
         </div>
-        <a href="#" onclick="document.getElementById('form-logout').submit(); return false;"
-           title="Cerrar sesión" style="color:#3d6040;" class="flex-shrink-0 transition-colors"
-           onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#3d6040'">
+        <a href="#" onclick="document.getElementById('form-logout').submit(); return false;" title="Cerrar sesión"
+           style="color:#58744f;" class="flex-shrink-0 transition-colors"
+           onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#58744f'">
             <i class="fas fa-sign-out-alt text-sm"></i>
         </a>
-         <form id="form-logout" action="{{ route('logout') }}" method="POST" style="display:none;">
+        <form id="form-logout" action="{{ route('logout') }}" method="POST" style="display:none;">
             @csrf
         </form>
     </div>
