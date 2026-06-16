@@ -125,9 +125,35 @@
                 <h1>4<span>0</span>4</h1>
             </div>
             <p>La página que busca no existe, ha cambiado de nombre o no está disponible temporalmente.</p>
-            <a href="./home">Volver al inicio</a>
+            <a href="#" id="btn-volver">Volver al inicio</a>
         </div>
     </div>
+   <script>
+    document.getElementById('btn-volver').addEventListener('click', function(e) {
+        e.preventDefault();
+
+        fetch("{{ url('/api/user-role') }}")
+            .then(response => response.json())
+            .then(data => {
+                if (data.logged_in && data.roles.length > 0) {
+                    
+                    if (data.roles.includes(2)) {
+                        window.location.replace("{{ route('admin.dashboard') }}");
+                    } else if (data.roles.includes(3)) {
+                        window.location.replace("{{ route('ventas.dashboard') }}");
+                    } else {
+                        window.location.replace("{{ route('home') }}");
+                    }
+
+                } else {
+                    window.location.replace("{{ route('home') }}");
+                }
+            })
+            .catch(error => {
+                window.location.replace("{{ route('home') }}");
+            });
+    });
+</script>
 </body>
 
 </html>

@@ -201,3 +201,14 @@ Route::middleware(['auth', 'es_admin'])->prefix('admin')->name('admin.')->group(
         Route::get('/usuarios/{id}/toggle', [App\Http\Controllers\Admin\UsuarioController::class, 'toggleActivo'])->name('usuarios.toggleActivo');
 
 });
+
+Route::get('/api/user-role', function () {
+    if (Auth::check()) {
+        // Obtenemos los IDs de los roles del usuario
+        return response()->json([
+            'logged_in' => true,
+            'roles' => Auth::user()->roles->pluck('id_rol')
+        ]);
+    }
+    return response()->json(['logged_in' => false, 'roles' => []]);
+})->middleware('web');
