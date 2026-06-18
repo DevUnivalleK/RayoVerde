@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -10,7 +11,6 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Font;
 
 class CotizacionExport implements FromArray, WithHeadings, WithStyles, ShouldAutoSize
 {
@@ -25,14 +25,25 @@ class CotizacionExport implements FromArray, WithHeadings, WithStyles, ShouldAut
     {
         $data = [];
         
+        // Formateo de fecha corregido para Bolivia
+        $fecha = Carbon::parse($this->cotizacion->generado_en)
+                       ->setTimezone('America/La_Paz')
+                       ->format('d/m/Y H:i');
+                       
+
         // Título
         $data[] = ['RAYO VERDE - COTIZACIÓN'];
         $data[] = [];
         
         // Información de la cotización
         $data[] = ['CÓDIGO:', $this->cotizacion->codigo];
-        $data[] = ['FECHA:', $this->cotizacion->generado_en];
-        $data[] = ['CLIENTE:', $this->cotizacion->cliente->empresa ?? 'N/A'];
+        $data[] = ['FECHA:', $fecha];
+        
+        
+        // Acceso a la empresa mediante la nueva relación 'cliente'
+        $empresa = $this->cotizacion->cliente ? $this->cotizacion->cliente->empresa : 'N/A';
+        $data[] = ['CLIENTE:', $empresa];
+        
         $data[] = ['VÁLIDO HASTA:', $this->cotizacion->vencimiento ?? '30 días'];
         $data[] = [];
         
@@ -65,64 +76,19 @@ class CotizacionExport implements FromArray, WithHeadings, WithStyles, ShouldAut
         return $data;
     }
 
-    public function headings(): array
-    {
-        return [];
-    }
+    public function headings(): array { return []; }
 
     public function styles(Worksheet $sheet)
     {
-        // Estilo para el título
         $sheet->mergeCells('A1:D1');
-        $sheet->getStyle('A1')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '006c0f']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
-        ]);
+        $sheet->getStyle('A1')->applyFromArray(['font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '006c0f']], 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]]);
         
-        // Estilo para la sección "PRODUCTOS"
-        $sheet->getStyle('A7:D7')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 12],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '006c0f']],
-            'font' => ['color' => ['rgb' => 'FFFFFF']]
-        ]);
+        $sheet->getStyle('A7:D7')->applyFromArray(['font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']], 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '006c0f']]]);
         
-        // Estilo para encabezados de tabla
-        $sheet->getStyle('A8:D8')->applyFromArray([
-            'font' => ['bold' => true],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'DAEED7']],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
-        ]);
-        
-        // Estilo para los datos de la tabla
-        $lastRow = $sheet->getHighestRow();
-        $sheet->getStyle('A9:D' . ($lastRow - 7))->applyFromArray([
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
-        ]);
-        
-        // Estilo para la sección "RESUMEN"
-        $resumenRow = $lastRow - 6;
-        $sheet->getStyle('A' . $resumenRow . ':D' . $resumenRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 12],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '006c0f']],
-            'font' => ['color' => ['rgb' => 'FFFFFF']]
-        ]);
-        
-        // Estilo para el TOTAL
-        $totalRow = $lastRow - 2;
-        $sheet->getStyle('A' . $totalRow . ':D' . $totalRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 14],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '64b863']]
-        ]);
-        
-        // Estilo para el mensaje final
-        $sheet->getStyle('A' . $lastRow . ':D' . $lastRow)->applyFromArray([
-            'font' => ['italic' => true, 'color' => ['rgb' => '666666']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
-        ]);
-        $sheet->mergeCells('A' . $lastRow . ':D' . $lastRow);
+        $sheet->getStyle('A8:D8')->applyFromArray(['font' => ['bold' => true], 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'DAEED7']], 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]]);
         
         // Alinear montos a la derecha
-        $sheet->getStyle('C9:D' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet->getStyle('C9:D100')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         
         return [];
     }

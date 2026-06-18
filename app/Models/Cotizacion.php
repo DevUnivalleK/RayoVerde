@@ -25,7 +25,10 @@ class Cotizacion extends Model
         
     ];
 
-
+public function cliente()
+{
+    return $this->hasOneThrough(Cliente::class, Usuario::class, 'id_usuario', 'id_usuario', 'id_usuario', 'id_usuario');
+}
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');

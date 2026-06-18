@@ -69,65 +69,58 @@
             </div>
         </div>
 
-        <div class="glass-card p-6 rounded-3xl flex items-center gap-5">
-            <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-inner">
-                <i class="fas fa-file-invoice text-xl"></i>
-            </div>
-            <div>
-                <p class="text-sm text-blue-800/60 font-bold uppercase tracking-wider">Cotizaciones</p>
-                <p class="text-2xl font-display text-blue-900 leading-none">
-                    3 <span class="text-sm font-sans font-medium text-blue-600">Activas</span>
-                </p>
-            </div>
-        </div>
+     <div class="glass-card p-6 rounded-3xl flex items-center gap-5">
+    <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-inner">
+        <i class="fas fa-file-invoice text-xl"></i>
+    </div>
+    <div>
+        <p class="text-sm text-blue-800/60 font-bold uppercase tracking-wider">Cotizaciones</p>
+        <p class="text-2xl font-display text-blue-900 leading-none">
+            {{ \App\Models\Cotizacion::where('id_usuario', auth()->id())->count() }} 
+            <span class="text-sm font-sans font-medium text-blue-600">Activas</span>
+        </p>
+    </div>
+</div>
 
-        <div class="glass-card p-6 rounded-3xl flex items-center gap-5">
-            <div class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-inner">
-                <i class="fas fa-shipping-fast text-xl"></i>
-            </div>
-            <div>
-                <p class="text-sm text-orange-800/60 font-bold uppercase tracking-wider">Último Pedido</p>
-                <p class="text-lg font-bold text-orange-900 leading-none truncate">En camino...</p>
-            </div>
+    </div>
+{{-- ── PRODUCTOS DESTACADOS ── --}}
+<section>
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h2 class="font-display text-3xl text-[#0e2a10]">Lo más buscado</h2>
+            <div class="h-1 w-12 bg-[#4CAF50] rounded-full mt-2"></div>
         </div>
+        <a href="{{ route('cliente.catalogo') }}" class="group text-sm font-bold text-[#4CAF50] flex items-center gap-2">
+            Ver todo el catálogo <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+        </a>
     </div>
 
-    {{-- ── PRODUCTOS DESTACADOS ── --}}
-    <section>
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h2 class="font-display text-3xl text-[#0e2a10]">Lo más buscado</h2>
-                <div class="h-1 w-12 bg-[#4CAF50] rounded-full mt-2"></div>
-            </div>
-            <a href="{{ route('cliente.catalogo') }}" class="group text-sm font-bold text-[#4CAF50] flex items-center gap-2">
-                Ver todo el catálogo <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-            </a>
-        </div>
-
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {{-- Card de Producto --}}
-            @forelse([1,2,3,4] as $item) {{-- Simulación de productos --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        {{-- Consulta directa al modelo limitando a los IDs 1 y 3 --}}
+        @forelse(\App\Models\Producto::whereIn('id_producto', [1, 3])->get() as $producto)
             <div class="group relative bg-white rounded-[2rem] p-4 shadow-sm border border-emerald-100/50 hover:shadow-xl transition-all overflow-hidden">
                 <div class="aspect-square bg-[#f5fbf2] rounded-2xl mb-4 overflow-hidden relative">
-                    <img src="https://via.placeholder.com/200" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                    <button class="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur shadow-sm rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors">
-                        <i class="far fa-heart text-xs"></i>
-                    </button>
+                    <img src="{{ $producto->imagen_url ?? 'https://via.placeholder.com/200' }}" 
+                         alt="{{ $producto->nombre }}"
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                 </div>
-                <h3 class="font-bold text-emerald-900 mb-1">Aceite de Moringa</h3>
-                <p class="text-xs text-emerald-600/70 mb-3">Prensado en frío · 250ml</p>
+                <h3 class="font-bold text-emerald-900 mb-1">{{ $producto->nombre }}</h3>
+                <p class="text-xs text-emerald-600/70 mb-3">Precio unitario</p>
                 <div class="flex items-center justify-between">
-                    <span class="text-xl font-display text-emerald-900">45.00 <small class="text-xs font-sans text-emerald-600">BOB</small></span>
+                    <span class="text-xl font-display text-emerald-900">
+                        {{ number_format($producto->precio, 2) }} 
+                        <small class="text-xs font-sans text-emerald-600">BOB</small>
+                    </span>
                     <button class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-[#4CAF50] hover:text-white transition-all shadow-sm">
                         <i class="fas fa-plus text-xs"></i>
                     </button>
                 </div>
             </div>
-            @empty
-                <p>No hay productos destacados por ahora.</p>
-            @endforelse
-        </div>
-    </section>
+        @empty
+            <p class="col-span-4 text-emerald-600">No hay productos destacados disponibles.</p>
+        @endforelse
+    </div>
+</section>
 
 </div>
 @endsection
