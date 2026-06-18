@@ -267,11 +267,6 @@
             </a>
         </div>
 
-        {{-- Envíos/Regiones --}}
-        <a href="#" class="nav-item">
-            <i class="fas fa-truck ni"></i><span>Envíos / Regiones</span>
-        </a>
-
         {{-- Gestión de Ventas --}}
         <button onclick="toggleSubmenu('sub-ventas',this)" class="nav-item">
             <i class="fas fa-cash-register ni"></i>
@@ -288,8 +283,9 @@
                 <span class="bp rounded-full text-white font-bold flex items-center justify-center"
                       style="background:#4CAF50; font-size:0.55rem; min-width:15px; height:15px; padding:0 3px;">!</span>
             </a>
-            <a href="{{ url('/mis-cotizaciones') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
-                <i class="fas fa-file-invoice-dollar ni" style="font-size:0.68rem;"></i><span>Cotizaciones</span>
+            <a href="{{ route('admin.usuarios.index') }}" class="nav-item" style="font-size:0.77rem; padding:6px 10px;">
+                <i class="fas fa-users ni" style="font-size:0.68rem;"></i>
+                <span>Gestión de usuarios</span>
             </a>
         </div>
 
@@ -331,11 +327,7 @@
 
         <p class="slabel">Configuración</p>
 
-        <a href="#" class="nav-item">
-            <i class="fas fa-sliders-h ni"></i><span>Config. Comercial</span>
-        </a>
-
-        <a href="{{ route('chatbot.index') }}" class="nav-item">
+        <a href="{{ route('admin.faq.index') }}" class="nav-item">
             <i class="fas fa-robot ni"></i><span>ChatBot</span>
         </a>
 

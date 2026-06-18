@@ -1,10 +1,11 @@
-@extends('layout')
+@extends('layouts.admin-sidebar')
+
 @section('title', 'Gestión de FAQ — Rayo Verde')
+@section('breadcrumb', 'Gestión de FAQ')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/estilosDash.css') }}">
 @endpush
-
 @section('content')
 
 {{-- ── HERO ─────────────────────────────────────────── --}}
